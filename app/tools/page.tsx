@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import NavBar from '@/app/_components/NavBar';
 import { requireRole } from '@/lib/auth';
 import { addTool, listTools } from '@/lib/store';
@@ -35,9 +36,14 @@ async function addToolAction(formData: FormData) {
   redirect('/tools');
 }
 
-export default function ToolsPage() {
+export default function ToolsPage({ searchParams }: { searchParams?: { kondisi?: string } }) {
   const user = requireRole(['admin', 'staff']);
   const tools = listTools(false);
+  const kondisiParam = typeof searchParams?.kondisi === 'string' ? searchParams.kondisi : '';
+  const kondisiFilter = KONDISI.includes(kondisiParam as ToolItem['kondisi'])
+    ? (kondisiParam as ToolItem['kondisi'])
+    : undefined;
+  const filteredTools = kondisiFilter ? tools.filter(t => t.kondisi === kondisiFilter) : tools;
   const kondisiBadge: Record<ToolItem['kondisi'], string> = {
     Baik: 'badge-status badge-status--good',
     Rusak: 'badge-status badge-status--danger',
@@ -104,8 +110,20 @@ export default function ToolsPage() {
           <div className="col-lg-7">
             <div className="p-3 card-glass">
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <h2 className="h6 mb-0">Daftar alat</h2>
-                <span className="small-muted">Total: {tools.length}</span>
+                <div>
+                  <h2 className="h6 mb-1">Daftar alat</h2>
+                  {kondisiFilter ? (
+                    <div className="small-muted">
+                      Filter: Kondisi = <b>{kondisiFilter}</b>{' '}
+                      <Link href="/tools" className="text-decoration-none">
+                        (Reset)
+                      </Link>
+                    </div>
+                  ) : (
+                    <span className="small-muted">Semua kondisi</span>
+                  )}
+                </div>
+                <span className="small-muted">Total: {filteredTools.length}</span>
               </div>
               <div className="table-responsive">
                 <table className="table table-soft table-hover align-middle">
@@ -120,7 +138,7 @@ export default function ToolsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tools.map(t => (
+                    {filteredTools.map(t => (
                       <tr key={t.id}>
                         <td className="fw-semibold">{t.kode}</td>
                         <td>{t.nama}</td>

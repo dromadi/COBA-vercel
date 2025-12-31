@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import NavBar from '@/app/_components/NavBar';
 import { requireUser } from '@/lib/auth';
-import { listTools, listRequestsForUser } from '@/lib/store';
+import { getToolById, getUserById, listAudit, listRequestsForUser, listTools } from '@/lib/store';
+import { formatDateId } from '@/lib/time';
+import { AuditLog, RequestStatus, ToolItem } from '@/lib/types';
 
 export default function DashboardPage() {
   const user = requireUser();
   const tools = listTools(true);
   const requests = listRequestsForUser(user.id, user.role);
+  const auditLogs = listAudit(10);
   const quickActions = [
     {
       title: 'Buat Request',
@@ -45,6 +48,54 @@ export default function DashboardPage() {
     reqActive: requests.filter(r => !['CLOSED', 'REJECTED'].includes(r.status)).length
   };
 
+  const kalibrasiTools = tools.filter(t => t.kondisi === 'Kalibrasi');
+  const pendingRequests = requests.filter(r => ['SUBMITTED', 'STAFF_VERIFIED', 'APPROVED'].includes(r.status));
+  const overdueRequests = requests.filter(r => {
+    if (['CLOSED', 'REJECTED', 'RETURNED'].includes(r.status)) return false;
+    return new Date(r.tglSelesaiRencana) < new Date();
+  });
+
+  const warningItems = [
+    {
+      title: 'Request overdue',
+      count: overdueRequests.length,
+      description: 'Request melewati rencana selesai.',
+      href: '/requests?status=overdue'
+    },
+    {
+      title: 'Kalibrasi due',
+      count: kalibrasiTools.length,
+      description: 'Alat butuh kalibrasi teknis.',
+      href: '/tools?kondisi=Kalibrasi'
+    },
+    {
+      title: 'Request menunggu',
+      count: pendingRequests.length,
+      description: 'Butuh verifikasi/approval.',
+      href: '/requests?status=pending'
+    }
+  ];
+
+  function activityLabel(entry: AuditLog) {
+    const actor = getUserById(entry.actorUserId);
+    const actorName = actor?.name || 'User';
+    const action = entry.action;
+    if (entry.entity === 'tool') {
+      const toolAfter = entry.after as ToolItem | null;
+      const toolName = toolAfter?.kode || getToolById(entry.entityId)?.kode || 'alat';
+      if (action === 'TOOL_CREATE') return `${actorName} menambahkan alat ${toolName}.`;
+      if (action === 'TOOL_STATUS') return `${actorName} mengubah kondisi ${toolName} → ${toolAfter?.kondisi ?? '—'}.`;
+    }
+    if (entry.entity === 'request') {
+      const nomor = entry.after?.nomor || 'request';
+      const status = entry.after?.status as RequestStatus | undefined;
+      if (action === 'REQUEST_CREATE') return `${actorName} membuat ${nomor}.`;
+      if (status) return `${actorName} memperbarui ${nomor} ke status ${status}.`;
+      return `${actorName} memperbarui ${nomor}.`;
+    }
+    return `${actorName} melakukan aktivitas.`;
+  }
+
   return (
     <div>
       <NavBar user={user} />
@@ -68,32 +119,32 @@ export default function DashboardPage() {
 
         <div className="row g-3 g-lg-4">
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card stat-card--primary">
+            <Link className="stat-card stat-card--primary stat-card-link" href="/tools">
               <div className="stat-card__label">Total Alat (aktif)</div>
               <div className="stat-card__value">{stat.totalTools}</div>
               <div className="stat-card__hint">Inventori siap pakai</div>
-            </div>
+            </Link>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card stat-card--info">
+            <Link className="stat-card stat-card--info stat-card-link" href="/tools?kondisi=Dipinjam">
               <div className="stat-card__label">Dipinjam</div>
               <div className="stat-card__value">{stat.dipinjam}</div>
               <div className="stat-card__hint">Sedang berada di user</div>
-            </div>
+            </Link>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card stat-card--warning">
+            <Link className="stat-card stat-card--warning stat-card-link" href="/tools?kondisi=Kalibrasi">
               <div className="stat-card__label">Kalibrasi</div>
               <div className="stat-card__value">{stat.butuhKalib}</div>
               <div className="stat-card__hint">Perlu tindakan teknis</div>
-            </div>
+            </Link>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card stat-card--success">
+            <Link className="stat-card stat-card--success stat-card-link" href="/requests?status=active">
               <div className="stat-card__label">Request aktif</div>
               <div className="stat-card__value">{stat.reqActive}</div>
               <div className="stat-card__hint">Menunggu proses</div>
-            </div>
+            </Link>
           </div>
         </div>
 
@@ -115,6 +166,54 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="row g-3 g-lg-4 mt-2">
+          <div className="col-lg-7">
+            <div className="info-card">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h2 className="h6 fw-semibold mb-0">Aktivitas Terbaru</h2>
+                <span className="small-muted">Update terakhir</span>
+              </div>
+              {auditLogs.length === 0 ? (
+                <div className="small-muted">Belum ada aktivitas. Mulai dari membuat request atau menambah alat.</div>
+              ) : (
+                <ul className="list-unstyled mb-0 d-flex flex-column gap-3">
+                  {auditLogs.map(entry => (
+                    <li key={entry.id} className="d-flex flex-column gap-1">
+                      <span className="fw-semibold">{activityLabel(entry)}</span>
+                      <span className="small-muted">{formatDateId(entry.at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className="col-lg-5">
+            <div className="info-card">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h2 className="h6 fw-semibold mb-0">Peringatan</h2>
+                <span className="small-muted">Perlu perhatian</span>
+              </div>
+              {warningItems.every(item => item.count === 0) && (
+                <div className="small-muted mb-3">Belum ada peringatan aktif saat ini.</div>
+              )}
+              <ul className="list-unstyled mb-0 d-flex flex-column gap-3">
+                {warningItems.map(item => (
+                  <li key={item.title} className="d-flex flex-column gap-1">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <Link className="fw-semibold text-decoration-none" href={item.href}>
+                        {item.title}
+                      </Link>
+                      <span className="badge badge-soft">{item.count}</span>
+                    </div>
+                    <span className="small-muted">{item.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div className="row g-3 g-lg-4 mt-1 mt-lg-2">
