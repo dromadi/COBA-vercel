@@ -10,7 +10,7 @@ export default function AuditPage() {
   return (
     <div>
       <NavBar user={user} />
-      <main className="container py-4">
+      <main className="app-container page-content">
         <div className="p-3 card-glass">
           <h1 className="h5 mb-1">Audit Log</h1>
           <p className="small-muted mb-3">MVP: audit log ringkas (before/after disederhanakan).</p>

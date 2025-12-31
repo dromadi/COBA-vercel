@@ -48,7 +48,7 @@ export default function DashboardPage() {
   return (
     <div>
       <NavBar user={user} />
-      <main className="container py-4 py-lg-5">
+      <main className="app-container page-content">
         <div className="dashboard-header mb-4">
           <div>
             <div className="d-flex align-items-center gap-2 mb-2">
