@@ -108,6 +108,41 @@ export function updateToolStatus(actorUserId: string, toolId: string, kondisi: T
   pushAudit({ actorUserId, action: 'TOOL_STATUS', entity: 'tool', entityId: t.id, before, after: t });
 }
 
+export function updateTool(
+  actorUserId: string,
+  toolId: string,
+  data: Pick<ToolItem, 'kode' | 'nama' | 'kategori' | 'lokasi' | 'kondisi'>
+) {
+  const st = getStore();
+  const t = st.tools.find(x => x.id === toolId);
+  if (!t) throw new Error('Tool tidak ditemukan');
+  const before = { ...t };
+  t.kode = data.kode;
+  t.nama = data.nama;
+  t.kategori = data.kategori;
+  t.lokasi = data.lokasi;
+  t.kondisi = data.kondisi;
+  pushAudit({ actorUserId, action: 'TOOL_UPDATE', entity: 'tool', entityId: t.id, before, after: t });
+}
+
+export function deactivateTool(actorUserId: string, toolId: string) {
+  const st = getStore();
+  const t = st.tools.find(x => x.id === toolId);
+  if (!t) throw new Error('Tool tidak ditemukan');
+  if (!t.isActive) return;
+  const before = { ...t };
+  t.isActive = false;
+  pushAudit({ actorUserId, action: 'TOOL_DEACTIVATE', entity: 'tool', entityId: t.id, before, after: t });
+}
+
+export function listRequestsByTool(toolId: string): BorrowRequest[] {
+  const st = getStore();
+  return st.requests
+    .filter(r => r.toolId === toolId)
+    .slice()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 export function listRequestsForUser(userId: string, role: Role): BorrowRequest[] {
   const st = getStore();
   const all = st.requests.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -207,4 +242,3 @@ export function formatRequestLabel(r: BorrowRequest) {
 export function getToolById(id: string) {
   return getStore().tools.find(t => t.id === id);
 }
-
