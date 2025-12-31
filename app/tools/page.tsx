@@ -15,6 +15,7 @@ import {
 import { BorrowRequest, ToolItem } from '@/lib/types';
 import { redirect } from 'next/navigation';
 import { formatDateId } from '@/lib/time';
+import ToolFilters from './ToolFilters';
 
 const KATEGORI = ['General Tools', 'Measurement Tools', 'Lifting Tools', 'Electrical Tools'];
 const LOKASI = ['PNS', 'LBA', 'KS Tubun', 'Priok'];
@@ -76,10 +77,30 @@ async function deactivateToolAction(formData: FormData) {
   redirect(`/tools?toolId=${toolId}`);
 }
 
-export default function ToolsPage({ searchParams }: { searchParams?: { kondisi?: string; toolId?: string; editId?: string } }) {
+type ToolSearchParams = {
+  q?: string;
+  kategori?: string;
+  lokasi?: string;
+  kondisi?: string;
+  aktif?: string;
+  sort?: string;
+  page?: string;
+  toolId?: string;
+  editId?: string;
+};
+
+const SORT_OPTIONS = ['kode-asc', 'kode-desc', 'nama-asc', 'nama-desc', 'created-desc'] as const;
+
+export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchParams }) {
   const user = requireRole(['admin', 'staff']);
   const tools = listTools(false);
+  const queryParam = typeof searchParams?.q === 'string' ? searchParams.q.trim() : '';
+  const kategoriParam = typeof searchParams?.kategori === 'string' ? searchParams.kategori : '';
+  const lokasiParam = typeof searchParams?.lokasi === 'string' ? searchParams.lokasi : '';
   const kondisiParam = typeof searchParams?.kondisi === 'string' ? searchParams.kondisi : '';
+  const aktifParam = typeof searchParams?.aktif === 'string' ? searchParams.aktif : '';
+  const sortParam = typeof searchParams?.sort === 'string' ? searchParams.sort : '';
+  const pageParam = typeof searchParams?.page === 'string' ? Number(searchParams.page) : 1;
   const detailToolId = typeof searchParams?.toolId === 'string' ? searchParams.toolId : '';
   const editToolId = typeof searchParams?.editId === 'string' ? searchParams.editId : '';
   const detailTool = detailToolId ? getToolById(detailToolId) : undefined;
@@ -88,10 +109,77 @@ export default function ToolsPage({ searchParams }: { searchParams?: { kondisi?:
   const toolAudit = detailTool
     ? listAudit(200).filter(entry => entry.entity === 'tool' && entry.entityId === detailTool.id)
     : [];
+  const kategoriFilter = KATEGORI.includes(kategoriParam) ? kategoriParam : '';
+  const lokasiFilter = LOKASI.includes(lokasiParam) ? lokasiParam : '';
   const kondisiFilter = KONDISI.includes(kondisiParam as ToolItem['kondisi'])
     ? (kondisiParam as ToolItem['kondisi'])
-    : undefined;
-  const filteredTools = kondisiFilter ? tools.filter(t => t.kondisi === kondisiFilter) : tools;
+    : '';
+  const aktifFilter = aktifParam === 'aktif' || aktifParam === 'nonaktif' ? aktifParam : '';
+  const sortFilter = SORT_OPTIONS.includes(sortParam as (typeof SORT_OPTIONS)[number]) ? sortParam : 'kode-asc';
+  const pageSize = 8;
+
+  const filteredTools = tools.filter(t => {
+    if (queryParam) {
+      const query = queryParam.toLowerCase();
+      const kodeMatch = t.kode.toLowerCase().includes(query);
+      const namaMatch = t.nama.toLowerCase().includes(query);
+      if (!kodeMatch && !namaMatch) return false;
+    }
+    if (kategoriFilter && t.kategori !== kategoriFilter) return false;
+    if (lokasiFilter && t.lokasi !== lokasiFilter) return false;
+    if (kondisiFilter && t.kondisi !== kondisiFilter) return false;
+    if (aktifFilter === 'aktif' && !t.isActive) return false;
+    if (aktifFilter === 'nonaktif' && t.isActive) return false;
+    return true;
+  });
+
+  const sortedTools = filteredTools.slice().sort((a, b) => {
+    switch (sortFilter) {
+      case 'kode-desc':
+        return b.kode.localeCompare(a.kode);
+      case 'nama-asc':
+        return a.nama.localeCompare(b.nama);
+      case 'nama-desc':
+        return b.nama.localeCompare(a.nama);
+      case 'created-desc':
+        return b.createdAt.localeCompare(a.createdAt);
+      default:
+        return a.kode.localeCompare(b.kode);
+    }
+  });
+
+  const totalItems = sortedTools.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? Math.min(pageParam, totalPages) : 1;
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, totalItems);
+  const pageTools = sortedTools.slice(pageStart, pageStart + pageSize);
+
+  const buildQuery = (overrides: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams();
+    if (queryParam) params.set('q', queryParam);
+    if (kategoriFilter) params.set('kategori', kategoriFilter);
+    if (lokasiFilter) params.set('lokasi', lokasiFilter);
+    if (kondisiFilter) params.set('kondisi', kondisiFilter);
+    if (aktifFilter) params.set('aktif', aktifFilter);
+    if (sortParam) params.set('sort', sortParam);
+    Object.entries(overrides).forEach(([key, value]) => {
+      if (value === undefined || value === '') {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
+    return params.toString();
+  };
+
+  const pageWindow = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(pageWindow / 2));
+  let endPage = Math.min(totalPages, startPage + pageWindow - 1);
+  if (endPage - startPage + 1 < pageWindow) {
+    startPage = Math.max(1, endPage - pageWindow + 1);
+  }
+  const pageNumbers = Array.from({ length: endPage - startPage + 1 }, (_, idx) => startPage + idx);
   const kondisiBadge: Record<ToolItem['kondisi'], string> = {
     Baik: 'badge-status badge-status--good',
     Rusak: 'badge-status badge-status--danger',
@@ -291,20 +379,30 @@ export default function ToolsPage({ searchParams }: { searchParams?: { kondisi?:
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <div>
                   <h2 className="h6 mb-1">Daftar alat</h2>
-                  {kondisiFilter ? (
-                    <div className="small-muted">
-                      Filter: Kondisi = <b>{kondisiFilter}</b>{' '}
-                      <Link href="/tools" className="text-decoration-none">
-                        (Reset)
-                      </Link>
-                    </div>
-                  ) : (
-                    <span className="small-muted">Semua kondisi</span>
-                  )}
+                  <span className="small-muted">Gunakan filter untuk menyaring data alat.</span>
                 </div>
-                <span className="small-muted">Total: {filteredTools.length}</span>
+                <span className="small-muted">Total: {totalItems}</span>
               </div>
-              {filteredTools.length === 0 ? (
+              <ToolFilters
+                kategoriOptions={KATEGORI}
+                lokasiOptions={LOKASI}
+                kondisiOptions={KONDISI}
+                initialQuery={{
+                  q: queryParam,
+                  kategori: kategoriFilter,
+                  lokasi: lokasiFilter,
+                  kondisi: kondisiFilter,
+                  aktif: aktifFilter,
+                  sort: sortParam
+                }}
+              />
+              <div className="d-flex justify-content-between align-items-center mt-3">
+                <span className="small-muted">
+                  Menampilkan {totalItems === 0 ? 0 : pageStart + 1}-{pageEnd} dari {totalItems} alat
+                </span>
+                <span className="small-muted">Halaman {currentPage} dari {totalPages}</span>
+              </div>
+              {pageTools.length === 0 ? (
                 <EmptyStateCard
                   title="Belum ada alat terdaftar"
                   description="Tambahkan alat baru agar bisa dipinjam atau digunakan di request."
@@ -353,7 +451,7 @@ export default function ToolsPage({ searchParams }: { searchParams?: { kondisi?:
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredTools.map(t => (
+                      {pageTools.map(t => (
                         <tr key={t.id}>
                           <td className="fw-semibold position-relative">
                             <Link
@@ -391,6 +489,29 @@ export default function ToolsPage({ searchParams }: { searchParams?: { kondisi?:
                     </tbody>
                   </table>
                 </div>
+              )}
+              {totalPages > 1 && (
+                <nav className="d-flex justify-content-end mt-3" aria-label="Pagination alat">
+                  <ul className="pagination pagination-sm mb-0">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <Link className="page-link" href={`/tools?${buildQuery({ page: currentPage - 1 })}`}>
+                        Prev
+                      </Link>
+                    </li>
+                    {pageNumbers.map(page => (
+                      <li key={page} className={`page-item ${page === currentPage ? 'active' : ''}`}>
+                        <Link className="page-link" href={`/tools?${buildQuery({ page })}`}>
+                          {page}
+                        </Link>
+                      </li>
+                    ))}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <Link className="page-link" href={`/tools?${buildQuery({ page: currentPage + 1 })}`}>
+                        Next
+                      </Link>
+                    </li>
+                  </ul>
+                </nav>
               )}
               <p className="small-muted mb-0">
                 Catatan: alat nonaktif tidak bisa dipinjam. Transisi kondisi “Dipinjam” otomatis saat HANDOVER.
