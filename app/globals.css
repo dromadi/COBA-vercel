@@ -1,0 +1,36 @@
+:root {
+  --bg: #0b1220;
+  --card: rgba(255,255,255,0.06);
+  --text: #e6e8ee;
+  --muted: rgba(230,232,238,0.75);
+  --border: rgba(255,255,255,0.12);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: radial-gradient(1200px 800px at 20% 10%, rgba(99, 102, 241, 0.25), transparent),
+              radial-gradient(1000px 700px at 80% 20%, rgba(16, 185, 129, 0.18), transparent),
+              var(--bg);
+  color: var(--text);
+}
+
+a { text-decoration: none; }
+
+.card-glass {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.small-muted { color: var(--muted); }
+
+.badge-soft {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+}
+
+.table-dark th, .table-dark td { vertical-align: middle; }
