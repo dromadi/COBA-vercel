@@ -4,6 +4,7 @@ import EmptyStateCard from '@/app/_components/EmptyStateCard';
 import { requireRole } from '@/lib/auth';
 import {
   addTool,
+  allocateNextToolCode,
   deactivateTool,
   getToolById,
   getUserById,
@@ -20,30 +21,78 @@ import ToolFilters from './ToolFilters';
 const KATEGORI = ['General Tools', 'Measurement Tools', 'Lifting Tools', 'Electrical Tools'];
 const LOKASI = ['PNS', 'LBA', 'KS Tubun', 'Priok'];
 const KONDISI: ToolItem['kondisi'][] = ['Baik', 'Rusak', 'Kalibrasi', 'Dipinjam'];
+const TOOL_CODE_PATTERN = /^TL-\d{4}$/;
+
+const normalizeKode = (value: string) => value.trim().toUpperCase();
+
+const buildFormParams = (data: {
+  kode?: string;
+  nama?: string;
+  kategori?: string;
+  lokasi?: string;
+  kondisi?: string;
+  error?: string;
+  form?: 'add' | 'edit';
+  editId?: string;
+}) => {
+  const params = new URLSearchParams();
+  if (data.form) params.set('form', data.form);
+  if (data.editId) params.set('editId', data.editId);
+  if (data.kode) params.set('kode', data.kode);
+  if (data.nama) params.set('nama', data.nama);
+  if (data.kategori) params.set('kategori', data.kategori);
+  if (data.lokasi) params.set('lokasi', data.lokasi);
+  if (data.kondisi) params.set('kondisi', data.kondisi);
+  if (data.error) params.set('error', data.error);
+  return params.toString();
+};
 
 async function addToolAction(formData: FormData) {
   'use server';
   const user = requireRole(['admin', 'staff']);
 
-  const kode = String(formData.get('kode') || '').trim();
+  const kodeInput = String(formData.get('kode') || '');
+  const kode = normalizeKode(kodeInput);
   const nama = String(formData.get('nama') || '').trim();
   const kategori = String(formData.get('kategori') || '').trim();
   const lokasi = String(formData.get('lokasi') || '').trim();
   const kondisi = String(formData.get('kondisi') || '').trim() as ToolItem['kondisi'];
+  const formPayload = { form: 'add' as const, kode, nama, kategori, lokasi, kondisi };
 
-  if (!kode || !nama) return;
-  if (!KATEGORI.includes(kategori)) return;
-  if (!LOKASI.includes(lokasi)) return;
-  if (!KONDISI.includes(kondisi)) return;
+  if (!kode) {
+    redirect(`/tools?${buildFormParams({ ...formPayload, error: 'Kode alat wajib diisi.' })}`);
+  }
+  if (!TOOL_CODE_PATTERN.test(kode)) {
+    redirect(`/tools?${buildFormParams({ ...formPayload, error: 'Format kode harus TL-0001.' })}`);
+  }
+  if (!nama) {
+    redirect(`/tools?${buildFormParams({ ...formPayload, error: 'Nama alat wajib diisi.' })}`);
+  }
+  if (!KATEGORI.includes(kategori)) {
+    redirect(`/tools?${buildFormParams({ ...formPayload, error: 'Kategori wajib dipilih.' })}`);
+  }
+  if (!LOKASI.includes(lokasi)) {
+    redirect(`/tools?${buildFormParams({ ...formPayload, error: 'Lokasi wajib dipilih.' })}`);
+  }
+  if (!KONDISI.includes(kondisi)) {
+    redirect(`/tools?${buildFormParams({ ...formPayload, error: 'Kondisi wajib dipilih.' })}`);
+  }
 
-  addTool(user.id, {
-    kode,
-    nama,
-    kategori,
-    lokasi,
-    kondisi,
-    isActive: true
-  });
+  try {
+    addTool(user.id, {
+      kode,
+      nama,
+      kategori,
+      lokasi,
+      kondisi,
+      isActive: true
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Kode alat sudah terdaftar.';
+    redirect(
+      `/tools?${buildFormParams({ form: 'add', kode, nama, kategori, lokasi, kondisi, error: message })}`
+    );
+  }
 
   redirect('/tools');
 }
@@ -53,18 +102,41 @@ async function updateToolAction(formData: FormData) {
   const user = requireRole(['admin', 'staff']);
   const toolId = String(formData.get('toolId') || '');
 
-  const kode = String(formData.get('kode') || '').trim();
+  const kodeInput = String(formData.get('kode') || '');
+  const kode = normalizeKode(kodeInput);
   const nama = String(formData.get('nama') || '').trim();
   const kategori = String(formData.get('kategori') || '').trim();
   const lokasi = String(formData.get('lokasi') || '').trim();
   const kondisi = String(formData.get('kondisi') || '').trim() as ToolItem['kondisi'];
 
-  if (!toolId || !kode || !nama) return;
-  if (!KATEGORI.includes(kategori)) return;
-  if (!LOKASI.includes(lokasi)) return;
-  if (!KONDISI.includes(kondisi)) return;
+  if (!toolId) {
+    redirect('/tools');
+  }
+  if (!kode) {
+    redirect(`/tools?${buildFormParams({ form: 'edit', editId: toolId, error: 'Kode alat wajib diisi.' })}`);
+  }
+  if (!TOOL_CODE_PATTERN.test(kode)) {
+    redirect(`/tools?${buildFormParams({ form: 'edit', editId: toolId, error: 'Format kode harus TL-0001.' })}`);
+  }
+  if (!nama) {
+    redirect(`/tools?${buildFormParams({ form: 'edit', editId: toolId, error: 'Nama alat wajib diisi.' })}`);
+  }
+  if (!KATEGORI.includes(kategori)) {
+    redirect(`/tools?${buildFormParams({ form: 'edit', editId: toolId, error: 'Kategori wajib dipilih.' })}`);
+  }
+  if (!LOKASI.includes(lokasi)) {
+    redirect(`/tools?${buildFormParams({ form: 'edit', editId: toolId, error: 'Lokasi wajib dipilih.' })}`);
+  }
+  if (!KONDISI.includes(kondisi)) {
+    redirect(`/tools?${buildFormParams({ form: 'edit', editId: toolId, error: 'Kondisi wajib dipilih.' })}`);
+  }
 
-  updateTool(user.id, toolId, { kode, nama, kategori, lokasi, kondisi });
+  try {
+    updateTool(user.id, toolId, { kode, nama, kategori, lokasi, kondisi });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Kode alat sudah terdaftar.';
+    redirect(`/tools?${buildFormParams({ form: 'edit', editId: toolId, error: message })}`);
+  }
   redirect(`/tools?toolId=${toolId}`);
 }
 
@@ -77,6 +149,28 @@ async function deactivateToolAction(formData: FormData) {
   redirect(`/tools?toolId=${toolId}`);
 }
 
+async function generateToolCodeAction(formData: FormData) {
+  'use server';
+  requireRole(['admin', 'staff']);
+
+  const kode = allocateNextToolCode();
+  const nama = String(formData.get('nama') || '').trim();
+  const kategori = String(formData.get('kategori') || '').trim();
+  const lokasi = String(formData.get('lokasi') || '').trim();
+  const kondisi = String(formData.get('kondisi') || '').trim();
+
+  const params = buildFormParams({
+    form: 'add',
+    kode,
+    nama,
+    kategori: KATEGORI.includes(kategori) ? kategori : '',
+    lokasi: LOKASI.includes(lokasi) ? lokasi : '',
+    kondisi: KONDISI.includes(kondisi as ToolItem['kondisi']) ? kondisi : ''
+  });
+
+  redirect(`/tools?${params}`);
+}
+
 type ToolSearchParams = {
   q?: string;
   kategori?: string;
@@ -87,6 +181,10 @@ type ToolSearchParams = {
   page?: string;
   toolId?: string;
   editId?: string;
+  form?: string;
+  error?: string;
+  kode?: string;
+  nama?: string;
 };
 
 const SORT_OPTIONS = ['kode-asc', 'kode-desc', 'nama-asc', 'nama-desc', 'created-desc'] as const;
@@ -103,6 +201,10 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
   const pageParam = typeof searchParams?.page === 'string' ? Number(searchParams.page) : 1;
   const detailToolId = typeof searchParams?.toolId === 'string' ? searchParams.toolId : '';
   const editToolId = typeof searchParams?.editId === 'string' ? searchParams.editId : '';
+  const errorParam = typeof searchParams?.error === 'string' ? searchParams.error : '';
+  const errorForm = typeof searchParams?.form === 'string' ? searchParams.form : '';
+  const kodeParam = typeof searchParams?.kode === 'string' ? searchParams.kode : '';
+  const namaParam = typeof searchParams?.nama === 'string' ? searchParams.nama : '';
   const detailTool = detailToolId ? getToolById(detailToolId) : undefined;
   const editTool = editToolId ? getToolById(editToolId) : undefined;
   const toolRequests = detailTool ? listRequestsByTool(detailTool.id) : [];
@@ -114,6 +216,9 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
   const kondisiFilter = KONDISI.includes(kondisiParam as ToolItem['kondisi'])
     ? (kondisiParam as ToolItem['kondisi'])
     : '';
+  const formKategori = kategoriFilter;
+  const formLokasi = lokasiFilter;
+  const formKondisi = kondisiFilter;
   const aktifFilter = aktifParam === 'aktif' || aktifParam === 'nonaktif' ? aktifParam : '';
   const sortFilter = SORT_OPTIONS.includes(sortParam as (typeof SORT_OPTIONS)[number]) ? sortParam : 'kode-asc';
   const pageSize = 8;
@@ -203,13 +308,23 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
               <p className="small-muted mb-3">
                 {editTool ? `Ubah detail untuk ${editTool.kode}.` : 'MVP: kode unik + dropdown kategori/lokasi/kondisi.'}
               </p>
+              {errorParam && ((editTool && errorForm === 'edit') || (!editTool && errorForm === 'add')) && (
+                <div className="alert alert-danger">{errorParam}</div>
+              )}
 
               {editTool ? (
                 <form action={updateToolAction} className="row g-2">
                   <input type="hidden" name="toolId" value={editTool.id} />
                   <div className="col-md-4">
                     <label className="form-label">Kode</label>
-                    <input name="kode" className="form-control" defaultValue={editTool.kode} required />
+                    <input
+                      name="kode"
+                      className="form-control"
+                      defaultValue={editTool.kode}
+                      required
+                      pattern="TL-\\d{4}"
+                      title="Gunakan format TL-0001"
+                    />
                   </div>
                   <div className="col-md-8">
                     <label className="form-label">Nama alat</label>
@@ -217,7 +332,7 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Kategori</label>
-                    <select name="kategori" className="form-select" defaultValue={editTool.kategori}>
+                    <select name="kategori" className="form-select" defaultValue={editTool.kategori} required>
                       {KATEGORI.map(k => (
                         <option key={k} value={k}>
                           {k}
@@ -227,7 +342,7 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Lokasi</label>
-                    <select name="lokasi" className="form-select" defaultValue={editTool.lokasi}>
+                    <select name="lokasi" className="form-select" defaultValue={editTool.lokasi} required>
                       {LOKASI.map(l => (
                         <option key={l} value={l}>
                           {l}
@@ -237,7 +352,7 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Kondisi</label>
-                    <select name="kondisi" className="form-select" defaultValue={editTool.kondisi}>
+                    <select name="kondisi" className="form-select" defaultValue={editTool.kondisi} required>
                       {KONDISI.map(s => (
                         <option key={s} value={s}>
                           {s}
@@ -256,15 +371,42 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
                 <form action={addToolAction} className="row g-2">
                   <div className="col-md-4">
                     <label className="form-label">Kode</label>
-                    <input name="kode" className="form-control" placeholder="TL-0004" required />
+                    <div className="input-group">
+                      <input
+                        name="kode"
+                        className="form-control"
+                        placeholder="TL-0004"
+                        defaultValue={kodeParam}
+                        required
+                        pattern="TL-\\d{4}"
+                        title="Gunakan format TL-0001"
+                      />
+                      <button
+                        className="btn btn-outline-secondary"
+                        type="submit"
+                        formAction={generateToolCodeAction}
+                        formNoValidate
+                      >
+                        Generate
+                      </button>
+                    </div>
                   </div>
                   <div className="col-md-8">
                     <label className="form-label">Nama alat</label>
-                    <input name="nama" className="form-control" placeholder="Contoh: Torque Wrench" required />
+                    <input
+                      name="nama"
+                      className="form-control"
+                      placeholder="Contoh: Torque Wrench"
+                      defaultValue={namaParam}
+                      required
+                    />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Kategori</label>
-                    <select name="kategori" className="form-select" defaultValue={KATEGORI[0]}>
+                    <select name="kategori" className="form-select" defaultValue={formKategori} required>
+                      <option value="" disabled>
+                        Pilih kategori
+                      </option>
                       {KATEGORI.map(k => (
                         <option key={k} value={k}>
                           {k}
@@ -274,7 +416,10 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Lokasi</label>
-                    <select name="lokasi" className="form-select" defaultValue={LOKASI[0]}>
+                    <select name="lokasi" className="form-select" defaultValue={formLokasi} required>
+                      <option value="" disabled>
+                        Pilih lokasi
+                      </option>
                       {LOKASI.map(l => (
                         <option key={l} value={l}>
                           {l}
@@ -284,7 +429,10 @@ export default function ToolsPage({ searchParams }: { searchParams?: ToolSearchP
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Kondisi</label>
-                    <select name="kondisi" className="form-select" defaultValue={'Baik'}>
+                    <select name="kondisi" className="form-select" defaultValue={formKondisi} required>
+                      <option value="" disabled>
+                        Pilih kondisi
+                      </option>
                       {KONDISI.map(s => (
                         <option key={s} value={s}>
                           {s}

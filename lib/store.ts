@@ -6,6 +6,7 @@ type Store = {
   tools: ToolItem[];
   requests: BorrowRequest[];
   audit: AuditLog[];
+  toolCodeSeq: number;
 };
 
 declare global {
@@ -61,7 +62,15 @@ function seed(): Store {
     }
   ];
 
-  return { users, tools, requests: [], audit: [] };
+  const toolCodeSeq = Math.max(
+    1,
+    ...tools
+      .map(tool => parseToolCodeSeq(tool.kode))
+      .filter((value): value is number => value !== null)
+      .map(seq => seq + 1)
+  );
+
+  return { users, tools, requests: [], audit: [], toolCodeSeq };
 }
 
 export function getStore(): Store {
@@ -91,10 +100,45 @@ export function listTools(activeOnly = true): ToolItem[] {
   return tools.slice().sort((a, b) => a.kode.localeCompare(b.kode));
 }
 
+function normalizeToolCode(kode: string) {
+  return kode.trim().toUpperCase();
+}
+
+function parseToolCodeSeq(kode: string) {
+  const match = /^TL-(\d{4})$/i.exec(kode.trim());
+  if (!match) return null;
+  return Number(match[1]);
+}
+
+function formatToolCode(seq: number) {
+  const padded = String(seq).padStart(4, '0');
+  return `TL-${padded}`;
+}
+
+export function allocateNextToolCode() {
+  const st = getStore();
+  let seq = st.toolCodeSeq;
+  let kode = formatToolCode(seq);
+  const existing = new Set(st.tools.map(tool => normalizeToolCode(tool.kode)));
+  while (existing.has(kode)) {
+    seq += 1;
+    kode = formatToolCode(seq);
+  }
+  st.toolCodeSeq = seq + 1;
+  return kode;
+}
+
 export function addTool(actorUserId: string, data: Omit<ToolItem, 'id' | 'createdAt'>): ToolItem {
   const st = getStore();
+  const normalizedCode = normalizeToolCode(data.kode);
+  const duplicate = st.tools.some(tool => normalizeToolCode(tool.kode) === normalizedCode);
+  if (duplicate) throw new Error('Kode alat sudah terdaftar');
   const tool: ToolItem = { id: randId('t'), createdAt: nowIsoJakarta(), ...data };
   st.tools.push(tool);
+  const seq = parseToolCodeSeq(normalizedCode);
+  if (seq !== null && seq >= st.toolCodeSeq) {
+    st.toolCodeSeq = seq + 1;
+  }
   pushAudit({ actorUserId, action: 'TOOL_CREATE', entity: 'tool', entityId: tool.id, before: null, after: tool });
   return tool;
 }
@@ -116,12 +160,19 @@ export function updateTool(
   const st = getStore();
   const t = st.tools.find(x => x.id === toolId);
   if (!t) throw new Error('Tool tidak ditemukan');
+  const normalizedCode = normalizeToolCode(data.kode);
+  const duplicate = st.tools.some(tool => tool.id !== toolId && normalizeToolCode(tool.kode) === normalizedCode);
+  if (duplicate) throw new Error('Kode alat sudah terdaftar');
   const before = { ...t };
   t.kode = data.kode;
   t.nama = data.nama;
   t.kategori = data.kategori;
   t.lokasi = data.lokasi;
   t.kondisi = data.kondisi;
+  const seq = parseToolCodeSeq(normalizedCode);
+  if (seq !== null && seq >= st.toolCodeSeq) {
+    st.toolCodeSeq = seq + 1;
+  }
   pushAudit({ actorUserId, action: 'TOOL_UPDATE', entity: 'tool', entityId: t.id, before, after: t });
 }
 
