@@ -17,37 +17,58 @@ export default function DashboardPage() {
   return (
     <div>
       <NavBar user={user} />
-      <main className="container py-4">
-        <div className="row g-3">
-          <div className="col-md-3">
-            <div className="p-3 card-glass">
-              <div className="small-muted">Total Alat (aktif)</div>
-              <div className="display-6 fw-semibold">{stat.totalTools}</div>
+      <main className="container py-4 py-lg-5">
+        <div className="dashboard-header mb-4">
+          <div>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <span className="badge badge-soft text-uppercase">{user.role}</span>
+              <span className="small-muted">Tools Lifecycle Hub</span>
+            </div>
+            <h1 className="h3 fw-semibold mb-1">Dashboard Operasional</h1>
+            <p className="small-muted mb-0">
+              Ringkasan aktivitas alat, request, dan status penting hari ini.
+            </p>
+          </div>
+          <div className="dashboard-header__meta">
+            <div className="small-muted">Login sebagai</div>
+            <div className="fw-semibold">{user.name}</div>
+          </div>
+        </div>
+
+        <div className="row g-3 g-lg-4">
+          <div className="col-md-6 col-lg-3">
+            <div className="stat-card">
+              <div className="stat-card__label">Total Alat (aktif)</div>
+              <div className="stat-card__value">{stat.totalTools}</div>
+              <div className="stat-card__hint">Inventori siap pakai</div>
             </div>
           </div>
-          <div className="col-md-3">
-            <div className="p-3 card-glass">
-              <div className="small-muted">Dipinjam</div>
-              <div className="display-6 fw-semibold">{stat.dipinjam}</div>
+          <div className="col-md-6 col-lg-3">
+            <div className="stat-card">
+              <div className="stat-card__label">Dipinjam</div>
+              <div className="stat-card__value">{stat.dipinjam}</div>
+              <div className="stat-card__hint">Sedang berada di user</div>
             </div>
           </div>
-          <div className="col-md-3">
-            <div className="p-3 card-glass">
-              <div className="small-muted">Kalibrasi</div>
-              <div className="display-6 fw-semibold">{stat.butuhKalib}</div>
+          <div className="col-md-6 col-lg-3">
+            <div className="stat-card">
+              <div className="stat-card__label">Kalibrasi</div>
+              <div className="stat-card__value">{stat.butuhKalib}</div>
+              <div className="stat-card__hint">Perlu tindakan teknis</div>
             </div>
           </div>
-          <div className="col-md-3">
-            <div className="p-3 card-glass">
-              <div className="small-muted">Request aktif</div>
-              <div className="display-6 fw-semibold">{stat.reqActive}</div>
+          <div className="col-md-6 col-lg-3">
+            <div className="stat-card">
+              <div className="stat-card__label">Request aktif</div>
+              <div className="stat-card__value">{stat.reqActive}</div>
+              <div className="stat-card__hint">Menunggu proses</div>
             </div>
           </div>
         </div>
 
-        <div className="row g-3 mt-2">
+        <div className="row g-3 g-lg-4 mt-1 mt-lg-2">
           <div className="col-lg-6">
-            <div className="p-3 card-glass">
+            <div className="info-card">
               <h5 className="mb-1">Cara cepat mencoba</h5>
               <p className="small-muted mb-2">
                 Ini MVP demo. Data tersimpan di memori server (bisa reset). Untuk versi produksi, sambungkan ke database
@@ -64,7 +85,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="col-lg-6">
-            <div className="p-3 card-glass">
+            <div className="info-card">
               <h5 className="mb-1">Catatan aturan “ultra-strict” (versi MVP)</h5>
               <ul className="mb-0">
                 <li>Status request mengikuti state machine (transisi via tombol).</li>
