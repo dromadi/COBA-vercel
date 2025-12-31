@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import NavBar from '@/app/_components/NavBar';
 import { requireUser } from '@/lib/auth';
 import { createRequest, getToolById, listRequestsForUser, listTools, transitionRequest } from '@/lib/store';
@@ -82,7 +83,7 @@ function actionButtons(userRole: string, r: BorrowRequest) {
   );
 }
 
-export default function RequestsPage() {
+export default function RequestsPage({ searchParams }: { searchParams?: { status?: string } }) {
   const user = requireUser();
   const requests = listRequestsForUser(user.id, user.role);
   const tools = listTools(true);
@@ -96,6 +97,33 @@ export default function RequestsPage() {
     RETURNED: 'badge-status badge-status--good',
     CLOSED: 'badge-status badge-status--warning'
   };
+  const statusParam = typeof searchParams?.status === 'string' ? searchParams.status : '';
+  const normalizedStatus = statusParam.toUpperCase();
+  const isActiveRequest = (r: BorrowRequest) => !['CLOSED', 'REJECTED'].includes(r.status);
+  const isOverdue = (r: BorrowRequest) =>
+    !['CLOSED', 'REJECTED', 'RETURNED'].includes(r.status) && new Date(r.tglSelesaiRencana) < new Date();
+
+  const filteredRequests = (() => {
+    if (!statusParam) return requests;
+    if (normalizedStatus === 'ACTIVE') return requests.filter(isActiveRequest);
+    if (normalizedStatus === 'PENDING')
+      return requests.filter(r => ['SUBMITTED', 'STAFF_VERIFIED', 'APPROVED'].includes(r.status));
+    if (normalizedStatus === 'OVERDUE') return requests.filter(isOverdue);
+    if ((Object.keys(statusBadge) as RequestStatus[]).includes(normalizedStatus as RequestStatus)) {
+      return requests.filter(r => r.status === normalizedStatus);
+    }
+    return requests;
+  })();
+  const filterLabel = (() => {
+    if (!statusParam) return 'Semua status';
+    if (normalizedStatus === 'ACTIVE') return 'Status aktif';
+    if (normalizedStatus === 'PENDING') return 'Menunggu proses';
+    if (normalizedStatus === 'OVERDUE') return 'Overdue';
+    if ((Object.keys(statusBadge) as RequestStatus[]).includes(normalizedStatus as RequestStatus)) {
+      return `Status = ${normalizedStatus}`;
+    }
+    return 'Semua status';
+  })();
 
   return (
     <div>
@@ -147,8 +175,21 @@ export default function RequestsPage() {
           <div className={(user.role === 'peminjam' || user.role === 'admin') ? 'col-lg-7' : 'col-12'}>
             <div className="p-3 card-glass">
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <h2 className="h6 mb-0">Daftar Request</h2>
-                <span className="small-muted">Total: {requests.length}</span>
+                <div>
+                  <h2 className="h6 mb-1">Daftar Request</h2>
+                  <div className="small-muted">
+                    {filterLabel}
+                    {statusParam && (
+                      <>
+                        {' '}
+                        <Link className="text-decoration-none" href="/requests">
+                          (Reset)
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <span className="small-muted">Total: {filteredRequests.length}</span>
               </div>
 
               <div className="table-responsive">
@@ -166,7 +207,7 @@ export default function RequestsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {requests.map(r => {
+                    {filteredRequests.map(r => {
                       const t = getToolById(r.toolId);
                       return (
                         <tr key={r.id}>
