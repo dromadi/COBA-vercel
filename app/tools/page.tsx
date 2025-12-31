@@ -48,7 +48,7 @@ export default function ToolsPage() {
   return (
     <div>
       <NavBar user={user} />
-      <main className="container py-4">
+      <main className="app-container page-content">
         <div className="row g-3">
           <div className="col-lg-5">
             <div className="p-3 card-glass">

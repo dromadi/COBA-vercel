@@ -100,7 +100,7 @@ export default function RequestsPage() {
   return (
     <div>
       <NavBar user={user} />
-      <main className="container py-4">
+      <main className="app-container page-content">
         <div className="row g-3">
           {(user.role === 'peminjam' || user.role === 'admin') && (
             <div className="col-lg-5">
