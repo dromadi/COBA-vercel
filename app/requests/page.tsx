@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import NavBar from '@/app/_components/NavBar';
+import EmptyStateCard from '@/app/_components/EmptyStateCard';
 import { requireUser } from '@/lib/auth';
 import { createRequest, getToolById, listRequestsForUser, listTools, transitionRequest } from '@/lib/store';
 import { BorrowRequest, RequestStatus, ToolItem } from '@/lib/types';
@@ -192,41 +193,77 @@ export default function RequestsPage({ searchParams }: { searchParams?: { status
                 <span className="small-muted">Total: {filteredRequests.length}</span>
               </div>
 
-              <div className="table-responsive">
-                <table className="table table-soft table-hover align-middle">
-                  <thead>
-                    <tr>
-                      <th>Nomor</th>
-                      <th>Alat</th>
-                      <th>Qty</th>
-                      <th>Kebutuhan</th>
-                      <th>Mulai</th>
-                      <th>Rencana selesai</th>
-                      <th>Status</th>
-                      <th style={{ minWidth: 260 }}>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRequests.map(r => {
-                      const t = getToolById(r.toolId);
-                      return (
-                        <tr key={r.id}>
-                          <td className="fw-semibold">{r.nomor}</td>
-                          <td>{toolLabel(t)}</td>
-                          <td>{r.qty}</td>
-                          <td>{r.kebutuhan}</td>
-                          <td>{formatDateId(r.tglMulai)}</td>
-                          <td>{formatDateId(r.tglSelesaiRencana)}</td>
-                          <td>
-                            <span className={statusBadge[r.status]}>{r.status}</span>
-                          </td>
-                          <td>{actionButtons(user.role, r) || <span className="small-muted">Tidak ada aksi.</span>}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              {filteredRequests.length === 0 ? (
+                <EmptyStateCard
+                  title="Belum ada request peminjaman"
+                  description="Mulai buat request baru untuk melihat riwayat status di sini."
+                  icon={
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M7 4h7l4 4v12H7V4Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M14 4v4h4"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M10 13h4m-2-2v4"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  }
+                  actions={[
+                    { label: 'Buat Request', href: '/requests', variant: 'primary' },
+                    { label: 'Refresh', href: '/requests', variant: 'outline' }
+                  ]}
+                />
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-soft table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th>Nomor</th>
+                        <th>Alat</th>
+                        <th>Qty</th>
+                        <th>Kebutuhan</th>
+                        <th>Mulai</th>
+                        <th>Rencana selesai</th>
+                        <th>Status</th>
+                        <th style={{ minWidth: 260 }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRequests.map(r => {
+                        const t = getToolById(r.toolId);
+                        return (
+                          <tr key={r.id}>
+                            <td className="fw-semibold">{r.nomor}</td>
+                            <td>{toolLabel(t)}</td>
+                            <td>{r.qty}</td>
+                            <td>{r.kebutuhan}</td>
+                            <td>{formatDateId(r.tglMulai)}</td>
+                            <td>{formatDateId(r.tglSelesaiRencana)}</td>
+                            <td>
+                              <span className={statusBadge[r.status]}>{r.status}</span>
+                            </td>
+                            <td>{actionButtons(user.role, r) || <span className="small-muted">Tidak ada aksi.</span>}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               <p className="small-muted mb-0">
                 Catatan: transisi status hanya via tombol. Setelah HANDOVER, kondisi alat otomatis menjadi "Dipinjam".

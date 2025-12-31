@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import NavBar from '@/app/_components/NavBar';
+import EmptyStateCard from '@/app/_components/EmptyStateCard';
 import { requireRole } from '@/lib/auth';
 import { addTool, listTools } from '@/lib/store';
 import { ToolItem } from '@/lib/types';
@@ -125,34 +126,70 @@ export default function ToolsPage({ searchParams }: { searchParams?: { kondisi?:
                 </div>
                 <span className="small-muted">Total: {filteredTools.length}</span>
               </div>
-              <div className="table-responsive">
-                <table className="table table-soft table-hover align-middle">
-                  <thead>
-                    <tr>
-                      <th>Kode</th>
-                      <th>Nama</th>
-                      <th>Kategori</th>
-                      <th>Lokasi</th>
-                      <th>Kondisi</th>
-                      <th>Aktif</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTools.map(t => (
-                      <tr key={t.id}>
-                        <td className="fw-semibold">{t.kode}</td>
-                        <td>{t.nama}</td>
-                        <td>{t.kategori}</td>
-                        <td>{t.lokasi}</td>
-                        <td>
-                          <span className={kondisiBadge[t.kondisi]}>{t.kondisi}</span>
-                        </td>
-                        <td>{t.isActive ? 'Ya' : 'Tidak'}</td>
+              {filteredTools.length === 0 ? (
+                <EmptyStateCard
+                  title="Belum ada alat terdaftar"
+                  description="Tambahkan alat baru agar bisa dipinjam atau digunakan di request."
+                  icon={
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M4 7h16v10H4V7Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M8 7V5h8v2"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M10 12h4"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  }
+                  actions={[
+                    { label: 'Tambah Alat', href: '/tools', variant: 'primary' },
+                    { label: 'Refresh', href: '/tools', variant: 'outline' }
+                  ]}
+                />
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-soft table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th>Kode</th>
+                        <th>Nama</th>
+                        <th>Kategori</th>
+                        <th>Lokasi</th>
+                        <th>Kondisi</th>
+                        <th>Aktif</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {filteredTools.map(t => (
+                        <tr key={t.id}>
+                          <td className="fw-semibold">{t.kode}</td>
+                          <td>{t.nama}</td>
+                          <td>{t.kategori}</td>
+                          <td>{t.lokasi}</td>
+                          <td>
+                            <span className={kondisiBadge[t.kondisi]}>{t.kondisi}</span>
+                          </td>
+                          <td>{t.isActive ? 'Ya' : 'Tidak'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <p className="small-muted mb-0">
                 Catatan: menu edit/nonaktif belum dibuat di MVP. Transisi kondisi “Dipinjam” otomatis saat HANDOVER.
               </p>

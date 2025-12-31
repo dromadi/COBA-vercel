@@ -1,4 +1,5 @@
 import NavBar from '@/app/_components/NavBar';
+import EmptyStateCard from '@/app/_components/EmptyStateCard';
 import { requireRole } from '@/lib/auth';
 import { listAudit, getUserById } from '@/lib/store';
 import { formatDateId } from '@/lib/time';
@@ -15,32 +16,58 @@ export default function AuditPage() {
           <h1 className="h5 mb-1">Audit Log</h1>
           <p className="small-muted mb-3">MVP: audit log ringkas (before/after disederhanakan).</p>
 
-          <div className="table-responsive">
-            <table className="table table-soft table-hover align-middle">
-              <thead>
-                <tr>
-                  <th>Waktu</th>
-                  <th>Aktor</th>
-                  <th>Action</th>
-                  <th>Entity</th>
-                  <th>Entity ID</th>
-                  <th>Remark</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map(l => (
-                  <tr key={l.id}>
-                    <td>{formatDateId(l.at)}</td>
-                    <td>{getUserById(l.actorUserId)?.email || l.actorUserId}</td>
-                    <td className="fw-semibold">{l.action}</td>
-                    <td>{l.entity}</td>
-                    <td className="small-muted">{l.entityId}</td>
-                    <td className="small-muted">{l.remark || '—'}</td>
+          {logs.length === 0 ? (
+            <EmptyStateCard
+              title="Belum ada audit log"
+              description="Aktivitas akan muncul di sini setelah ada perubahan data atau request."
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M9 5h6l1 2h4v2H4V7h4l1-2Zm-2 6h10v7H7v-7Z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 14h6"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+              actions={[{ label: 'Refresh', href: '/audit', variant: 'outline' }]}
+            />
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-soft table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Aktor</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Entity ID</th>
+                    <th>Remark</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {logs.map(l => (
+                    <tr key={l.id}>
+                      <td>{formatDateId(l.at)}</td>
+                      <td>{getUserById(l.actorUserId)?.email || l.actorUserId}</td>
+                      <td className="fw-semibold">{l.action}</td>
+                      <td>{l.entity}</td>
+                      <td className="small-muted">{l.entityId}</td>
+                      <td className="small-muted">{l.remark || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <details className="mt-2">
             <summary className="small-muted">Catatan</summary>
