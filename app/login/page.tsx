@@ -34,7 +34,7 @@ export default function LoginPage({
               </div>
               <div className="col-12 d-flex gap-2">
                 <button className="btn btn-primary">Masuk</button>
-                <Link className="btn btn-outline-light" href="/">Kembali</Link>
+                <Link className="btn btn-outline-primary" href="/">Kembali</Link>
               </div>
             </form>
           </div>
@@ -45,7 +45,7 @@ export default function LoginPage({
             <h2 className="h5">Akun demo</h2>
             <p className="small-muted mb-3">Semua akun memakai password yang sama: <b>trl12345</b></p>
             <div className="table-responsive">
-              <table className="table table-dark table-striped align-middle">
+              <table className="table table-soft table-hover align-middle">
                 <thead>
                   <tr>
                     <th>Role</th>
@@ -55,22 +55,22 @@ export default function LoginPage({
                 </thead>
                 <tbody>
                   <tr>
-                    <td><span className="badge text-bg-secondary">ADMIN</span></td>
+                    <td><span className="badge badge-role">ADMIN</span></td>
                     <td>admin@trl.local</td>
                     <td>Semua fitur + audit log + close request</td>
                   </tr>
                   <tr>
-                    <td><span className="badge text-bg-secondary">STAFF</span></td>
+                    <td><span className="badge badge-role">STAFF</span></td>
                     <td>staff@trl.local</td>
                     <td>Verifikasi request + handover + return</td>
                   </tr>
                   <tr>
-                    <td><span className="badge text-bg-secondary">APPROVAL</span></td>
+                    <td><span className="badge badge-role">APPROVAL</span></td>
                     <td>approval@trl.local</td>
                     <td>Approve / reject</td>
                   </tr>
                   <tr>
-                    <td><span className="badge text-bg-secondary">PEMINJAM</span></td>
+                    <td><span className="badge badge-role">PEMINJAM</span></td>
                     <td>peminjam@trl.local</td>
                     <td>Buat & submit request</td>
                   </tr>

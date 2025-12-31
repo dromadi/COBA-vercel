@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import NavBar from '@/app/_components/NavBar';
 import { requireUser } from '@/lib/auth';
 import { listTools, listRequestsForUser } from '@/lib/store';
@@ -6,6 +7,36 @@ export default function DashboardPage() {
   const user = requireUser();
   const tools = listTools(true);
   const requests = listRequestsForUser(user.id, user.role);
+  const quickActions = [
+    {
+      title: 'Buat Request',
+      desc: 'Ajukan peminjaman alat baru untuk tim.',
+      href: '/requests',
+      icon: '📝',
+      show: user.role === 'peminjam' || user.role === 'admin'
+    },
+    {
+      title: 'Kelola Master Alat',
+      desc: 'Tambah, cek, dan atur stok alat aktif.',
+      href: '/tools',
+      icon: '🧰',
+      show: user.role === 'admin' || user.role === 'staff'
+    },
+    {
+      title: 'Pantau Audit Log',
+      desc: 'Lihat jejak perubahan dan aktivitas.',
+      href: '/audit',
+      icon: '🛰️',
+      show: user.role === 'admin'
+    },
+    {
+      title: 'Lihat Request',
+      desc: 'Review status request yang berjalan.',
+      href: '/requests',
+      icon: '📌',
+      show: user.role !== 'peminjam'
+    }
+  ].filter(action => action.show);
 
   const stat = {
     totalTools: tools.length,
@@ -37,33 +68,53 @@ export default function DashboardPage() {
 
         <div className="row g-3 g-lg-4">
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card">
+            <div className="stat-card stat-card--primary">
               <div className="stat-card__label">Total Alat (aktif)</div>
               <div className="stat-card__value">{stat.totalTools}</div>
               <div className="stat-card__hint">Inventori siap pakai</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card">
+            <div className="stat-card stat-card--info">
               <div className="stat-card__label">Dipinjam</div>
               <div className="stat-card__value">{stat.dipinjam}</div>
               <div className="stat-card__hint">Sedang berada di user</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card">
+            <div className="stat-card stat-card--warning">
               <div className="stat-card__label">Kalibrasi</div>
               <div className="stat-card__value">{stat.butuhKalib}</div>
               <div className="stat-card__hint">Perlu tindakan teknis</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card">
+            <div className="stat-card stat-card--success">
               <div className="stat-card__label">Request aktif</div>
               <div className="stat-card__value">{stat.reqActive}</div>
               <div className="stat-card__hint">Menunggu proses</div>
             </div>
           </div>
+        </div>
+
+        <div className="row g-3 g-lg-4 mt-2">
+          <div className="col-12">
+            <h2 className="h6 fw-semibold mb-3">Aksi cepat</h2>
+          </div>
+          {quickActions.map(action => (
+            <div key={action.title} className="col-md-6 col-lg-3">
+              <div className="action-card h-100 d-flex flex-column gap-2">
+                <div className="action-card__icon">{action.icon}</div>
+                <div>
+                  <h3 className="h6 fw-semibold mb-1">{action.title}</h3>
+                  <p className="small-muted mb-2">{action.desc}</p>
+                </div>
+                <Link className="btn btn-outline-primary btn-sm mt-auto align-self-start" href={action.href}>
+                  Buka
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="row g-3 g-lg-4 mt-1 mt-lg-2">

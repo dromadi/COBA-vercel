@@ -51,6 +51,17 @@ function actionButtons(userRole: string, r: BorrowRequest) {
   const available = ACTIONS.filter(a => a.roles.includes(userRole) && a.from.includes(r.status));
   if (available.length === 0) return null;
 
+  const actionButtonClass: Record<RequestStatus, string> = {
+    DRAFT: 'btn-outline-primary',
+    SUBMITTED: 'btn-outline-primary',
+    STAFF_VERIFIED: 'btn-outline-primary',
+    APPROVED: 'btn-outline-primary',
+    REJECTED: 'btn-outline-primary',
+    HANDOVER: 'btn-outline-primary',
+    RETURNED: 'btn-outline-primary',
+    CLOSED: 'btn-outline-primary'
+  };
+
   return (
     <div className="d-flex flex-column gap-2">
       {available.map(a => (
@@ -62,7 +73,7 @@ function actionButtons(userRole: string, r: BorrowRequest) {
             className="form-control form-control-sm"
             placeholder="Catatan (opsional)"
           />
-          <button className="btn btn-outline-light btn-sm" type="submit">
+          <button className={`btn ${actionButtonClass[a.to]} btn-sm`} type="submit">
             {a.label}
           </button>
         </form>
@@ -75,6 +86,16 @@ export default function RequestsPage() {
   const user = requireUser();
   const requests = listRequestsForUser(user.id, user.role);
   const tools = listTools(true);
+  const statusBadge: Record<RequestStatus, string> = {
+    DRAFT: 'badge-status badge-status--info',
+    SUBMITTED: 'badge-status badge-status--primary',
+    STAFF_VERIFIED: 'badge-status badge-status--warning',
+    APPROVED: 'badge-status badge-status--good',
+    REJECTED: 'badge-status badge-status--danger',
+    HANDOVER: 'badge-status badge-status--info',
+    RETURNED: 'badge-status badge-status--good',
+    CLOSED: 'badge-status badge-status--warning'
+  };
 
   return (
     <div>
@@ -97,7 +118,7 @@ export default function RequestsPage() {
                         </option>
                       ))}
                     </select>
-                    <div className="form-text text-white-50">Alat non-"Baik" otomatis disabled.</div>
+                    <div className="form-text">Alat non-"Baik" otomatis disabled.</div>
                   </div>
                   <div className="col-md-4">
                     <label className="form-label">Qty</label>
@@ -131,7 +152,7 @@ export default function RequestsPage() {
               </div>
 
               <div className="table-responsive">
-                <table className="table table-dark table-striped align-middle">
+                <table className="table table-soft table-hover align-middle">
                   <thead>
                     <tr>
                       <th>Nomor</th>
@@ -156,7 +177,7 @@ export default function RequestsPage() {
                           <td>{formatDateId(r.tglMulai)}</td>
                           <td>{formatDateId(r.tglSelesaiRencana)}</td>
                           <td>
-                            <span className="badge text-bg-secondary">{r.status}</span>
+                            <span className={statusBadge[r.status]}>{r.status}</span>
                           </td>
                           <td>{actionButtons(user.role, r) || <span className="small-muted">Tidak ada aksi.</span>}</td>
                         </tr>
