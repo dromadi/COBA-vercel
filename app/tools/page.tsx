@@ -38,6 +38,12 @@ async function addToolAction(formData: FormData) {
 export default function ToolsPage() {
   const user = requireRole(['admin', 'staff']);
   const tools = listTools(false);
+  const kondisiBadge: Record<ToolItem['kondisi'], string> = {
+    Baik: 'badge-status badge-status--good',
+    Rusak: 'badge-status badge-status--danger',
+    Kalibrasi: 'badge-status badge-status--warning',
+    Dipinjam: 'badge-status badge-status--info'
+  };
 
   return (
     <div>
@@ -102,7 +108,7 @@ export default function ToolsPage() {
                 <span className="small-muted">Total: {tools.length}</span>
               </div>
               <div className="table-responsive">
-                <table className="table table-dark table-striped align-middle">
+                <table className="table table-soft table-hover align-middle">
                   <thead>
                     <tr>
                       <th>Kode</th>
@@ -121,7 +127,7 @@ export default function ToolsPage() {
                         <td>{t.kategori}</td>
                         <td>{t.lokasi}</td>
                         <td>
-                          <span className="badge text-bg-secondary">{t.kondisi}</span>
+                          <span className={kondisiBadge[t.kondisi]}>{t.kondisi}</span>
                         </td>
                         <td>{t.isActive ? 'Ya' : 'Tidak'}</td>
                       </tr>

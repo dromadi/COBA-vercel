@@ -16,7 +16,7 @@ export default function AuditPage() {
           <p className="small-muted mb-3">MVP: audit log ringkas (before/after disederhanakan).</p>
 
           <div className="table-responsive">
-            <table className="table table-dark table-striped align-middle">
+            <table className="table table-soft table-hover align-middle">
               <thead>
                 <tr>
                   <th>Waktu</th>
@@ -34,8 +34,8 @@ export default function AuditPage() {
                     <td>{getUserById(l.actorUserId)?.email || l.actorUserId}</td>
                     <td className="fw-semibold">{l.action}</td>
                     <td>{l.entity}</td>
-                    <td className="text-white-50">{l.entityId}</td>
-                    <td className="text-white-50">{l.remark || '—'}</td>
+                    <td className="small-muted">{l.entityId}</td>
+                    <td className="small-muted">{l.remark || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -43,7 +43,7 @@ export default function AuditPage() {
           </div>
 
           <details className="mt-2">
-            <summary className="small text-white-50">Catatan</summary>
+            <summary className="small-muted">Catatan</summary>
             <ul className="small-muted mt-2">
               <li>Di produksi: simpan audit log ke DB, dan simpan before/after sebagai JSONB.</li>
               <li>Tambahkan event log terpisah untuk kebutuhan pelaporan.</li>
