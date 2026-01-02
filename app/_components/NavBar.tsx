@@ -4,19 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SessionUser } from '@/lib/types';
 import { signOut } from 'next-auth/react';
+import { navLinks } from './navLinks';
 
 export default function NavBar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
-  const links: Array<{ href: string; label: string; roles?: SessionUser['role'][] }> = [
-    { href: '/', label: 'Dashboard' },
-    { href: '/tools', label: 'Master Alat', roles: ['admin', 'staff'] },
-    { href: '/master', label: 'Master Data', roles: ['admin'] },
-    { href: '/requests', label: 'Peminjaman' },
-    { href: '/staff/queue', label: 'Antrian Staff', roles: ['staff', 'admin'] },
-    { href: '/approval', label: 'Approval', roles: ['approval', 'admin'] },
-    { href: '/exports', label: 'Export', roles: ['admin', 'staff'] },
-    { href: '/audit', label: 'Audit Log', roles: ['admin'] }
-  ];
+  const links = navLinks.filter(link => !link.roles || link.roles.includes(user.role));
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light navbar-sticky">
@@ -37,19 +29,17 @@ export default function NavBar({ user }: { user: SessionUser }) {
         </button>
         <div className="collapse navbar-collapse" id="trlNavbar">
           <ul className="nav nav-pills navbar-nav me-auto mb-2 mb-lg-0 gap-1">
-            {links
-              .filter(l => !l.roles || l.roles.includes(user.role))
-              .map(l => (
-                <li key={l.href} className="nav-item">
-                  <Link
-                    className={`nav-link ${pathname === l.href ? 'active' : ''}`}
-                    href={l.href}
-                    aria-current={pathname === l.href ? 'page' : undefined}
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+            {links.map(link => (
+              <li key={link.href} className="nav-item">
+                <Link
+                  className={`nav-link ${pathname === link.href ? 'active' : ''}`}
+                  href={link.href}
+                  aria-current={pathname === link.href ? 'page' : undefined}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
           <div className="dropdown user-menu mt-2 mt-lg-0 ms-lg-3">
             <button

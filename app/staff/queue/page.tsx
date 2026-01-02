@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireRole } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
@@ -15,9 +15,7 @@ export default async function StaffQueuePage() {
   });
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
+    <AppShell user={user}>
         <h1 className="h5 mb-3">Antrian Staff</h1>
         {requests.length === 0 ? (
           <div className="card-glass p-3">Tidak ada request operasional.</div>
@@ -53,7 +51,6 @@ export default async function StaffQueuePage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </AppShell>
   );
 }

@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireRole } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
@@ -42,9 +42,7 @@ export default async function ApprovalPage({ searchParams }: { searchParams?: { 
   const reasons = await prisma.masterReason.findMany({ where: { isActive: true, deletedAt: null } });
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
+    <AppShell user={user}>
         <h1 className="h5 mb-3">Antrian Approval</h1>
         {searchParams?.error && <div className="alert alert-danger">{searchParams.error}</div>}
         {requests.length === 0 ? (
@@ -93,7 +91,6 @@ export default async function ApprovalPage({ searchParams }: { searchParams?: { 
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </AppShell>
   );
 }

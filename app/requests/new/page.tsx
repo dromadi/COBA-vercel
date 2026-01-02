@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireUser } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { requestCreateSchema } from '@/lib/validation';
@@ -31,9 +31,8 @@ export default async function NewRequestPage({ searchParams }: { searchParams?: 
   const user = await requireUser();
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content" style={{ maxWidth: 800 }}>
+    <AppShell user={user}>
+      <div style={{ maxWidth: 800 }}>
         <h1 className="h5 mb-3">Buat Request Peminjaman</h1>
         {searchParams?.error && <div className="alert alert-danger">{searchParams.error}</div>}
         <div className="card-glass p-3">
@@ -56,7 +55,7 @@ export default async function NewRequestPage({ searchParams }: { searchParams?: 
             </div>
           </form>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
