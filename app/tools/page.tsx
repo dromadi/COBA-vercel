@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { toolSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
-import { AuditAction, EventAction } from '@prisma/client';
+import { AuditAction, EventAction, Prisma } from '@prisma/client';
 
 async function createToolAction(formData: FormData) {
   'use server';
@@ -158,19 +158,19 @@ export default async function ToolsPage({
   const q = searchParams?.q || '';
   const activeParam = searchParams?.active;
   const conditionParam = searchParams?.condition;
-  const where = {
+  const where: Prisma.ToolWhereInput = {
     deletedAt: null,
     ...(activeParam === '1' ? { isActive: true } : {}),
     ...(conditionParam ? { condition: { code: conditionParam } } : {}),
     ...(q
       ? {
           OR: [
-            { toolCode: { contains: q, mode: 'insensitive' } },
-            { name: { contains: q, mode: 'insensitive' } }
+            { toolCode: { contains: q, mode: Prisma.QueryMode.insensitive } },
+            { name: { contains: q, mode: Prisma.QueryMode.insensitive } }
           ]
         }
       : {})
-  } as const;
+  };
 
   const [tools, total, categories, locations, conditions] = await Promise.all([
     prisma.tool.findMany({

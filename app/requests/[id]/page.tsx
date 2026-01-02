@@ -8,7 +8,7 @@ import { formatDateId, isoFromDateInput } from '@/lib/time';
 import { put } from '@vercel/blob';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
-import { AuditAction, EventAction, RequestStatus } from '@prisma/client';
+import { AttachmentEntityType, AuditAction, EventAction, RequestStatus } from '@prisma/client';
 
 const statusBadge: Record<RequestStatus, string> = {
   DRAFT: 'badge-status badge-status--info',
@@ -249,13 +249,20 @@ export default async function RequestDetailPage({ params, searchParams }: { para
     include: {
       borrower: true,
       items: { include: { tool: true } },
-      attachments: { where: { deletedAt: null } },
       correctionNotes: { include: { actions: true, requester: true, approver: true } }
     }
   });
 
   if (!request) redirect('/requests');
   if (user.role === 'peminjam' && request.borrowerId !== user.id) redirect('/403');
+
+  const attachments = await prisma.attachment.findMany({
+    where: {
+      entityId: request.id,
+      entityType: { in: [AttachmentEntityType.REQUEST, AttachmentEntityType.HANDOVER, AttachmentEntityType.RETURN] },
+      deletedAt: null
+    }
+  });
 
   const tools = await prisma.tool.findMany({
     where: { isActive: true, deletedAt: null },
@@ -264,8 +271,8 @@ export default async function RequestDetailPage({ params, searchParams }: { para
 
   const reasons = await prisma.masterReason.findMany({ where: { isActive: true, deletedAt: null } });
 
-  const hasHandover = request.attachments.some(att => att.requiredType === 'BA_HANDOVER');
-  const hasReturn = request.attachments.some(att => att.requiredType === 'BA_RETURN');
+  const hasHandover = attachments.some(att => att.requiredType === 'BA_HANDOVER');
+  const hasReturn = attachments.some(att => att.requiredType === 'BA_RETURN');
 
   const isBorrower = user.id === request.borrowerId;
 
@@ -497,7 +504,7 @@ export default async function RequestDetailPage({ params, searchParams }: { para
                 )}
               </div>
               <ul className="list-unstyled mt-3">
-                {request.attachments.map(att => (
+                {attachments.map(att => (
                   <li key={att.id}>
                     <a href={att.fileUrl} target="_blank" rel="noreferrer">{att.fileName}</a>
                   </li>
