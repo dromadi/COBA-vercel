@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  staff
+  approval
+  peminjam
+}
+
+enum RequestStatus {
+  DRAFT
+  SUBMITTED
+  STAFF_REVIEW
+  APPROVAL_PENDING
+  APPROVED
+  READY_FOR_PICKUP
+  CHECKED_OUT
+  RETURN_REQUESTED
+  RETURNED
+  REJECTED
+  CANCELLED
+  OVERDUE
+}
+
+enum AttachmentEntityType {
+  REQUEST
+  ITEM
+  HANDOVER
+  RETURN
+  CORRECTION
+}
+
+enum AttachmentRequiredType {
+  SURAT_TUGAS
+  BA_HANDOVER
+  BA_RETURN
+  CORRECTION_NOTE
+  OTHER
+}
+
+enum EventAction {
+  CREATE
+  UPDATE
+  SUBMIT
+  STAFF_REVIEW
+  SEND_TO_APPROVAL
+  APPROVE
+  REJECT
+  READY_PICKUP
+  CHECKOUT
+  REQUEST_RETURN
+  RECEIVE_RETURN
+  CANCEL
+  OVERDUE_FLAG
+  CORRECTION_REQUEST
+  CORRECTION_DECISION
+  SOFT_DELETE
+  RESTORE
+  EXPORT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  SOFT_DELETE
+  RESTORE
+  STATE_TRANSITION
+}
+
+enum CorrectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  borrowRequests BorrowRequest[] @relation("BorrowerRequests")
+  auditLogs      AuditLog[]
+  eventLogs      EventLog[]
+  attachments    Attachment[]
+  correctionNotesRequested CorrectionNote[] @relation("CorrectionRequested")
+  correctionNotesApproved  CorrectionNote[] @relation("CorrectionApproved")
+}
+
+model ToolCategory {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tools Tool[]
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tools Tool[]
+}
+
+model Condition {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tools Tool[]
+}
+
+model Tool {
+  id              String   @id @default(uuid())
+  toolCode        String   @unique
+  name            String
+  categoryId      String
+  locationId      String
+  assetNo         String?
+  serialNo        String?
+  unit            String
+  conditionId     String
+  ownershipStatus String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  category ToolCategory @relation(fields: [categoryId], references: [id])
+  location Location    @relation(fields: [locationId], references: [id])
+  condition Condition  @relation(fields: [conditionId], references: [id])
+  requestItems BorrowRequestItem[]
+}
+
+model BorrowRequest {
+  id                 String        @id @default(uuid())
+  requestNo          String        @unique
+  borrowerId         String
+  purpose            String
+  startDate          DateTime
+  endDatePlan        DateTime
+  status             RequestStatus
+  currentAssigneeRole Role
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  submittedAt        DateTime?
+  approvedAt         DateTime?
+  rejectedAt         DateTime?
+  checkedOutAt       DateTime?
+  returnedAt         DateTime?
+  isLocked           Boolean       @default(false)
+  deletedAt          DateTime?
+
+  borrower User @relation("BorrowerRequests", fields: [borrowerId], references: [id])
+  items    BorrowRequestItem[]
+  attachments Attachment[]
+  correctionNotes CorrectionNote[]
+}
+
+model BorrowRequestItem {
+  id        String   @id @default(uuid())
+  requestId String
+  toolId    String
+  qty       Int      @default(1)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  request BorrowRequest @relation(fields: [requestId], references: [id])
+  tool    Tool          @relation(fields: [toolId], references: [id])
+  attachments Attachment[]
+}
+
+model Attachment {
+  id          String                @id @default(uuid())
+  entityType  AttachmentEntityType
+  entityId    String
+  fileName    String
+  fileUrl     String
+  mimeType    String
+  fileSize    Int
+  requiredType AttachmentRequiredType
+  uploadedBy  String
+  uploadedAt  DateTime              @default(now())
+  deletedAt   DateTime?
+
+  uploader User @relation(fields: [uploadedBy], references: [id])
+}
+
+model EventLog {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  action     EventAction
+  remark     String?
+  metadata   Json?
+  actorId    String
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tableName String
+  recordId  String
+  action    AuditAction
+  before    Json?
+  after     Json?
+  actorId   String
+  createdAt DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+}
+
+model CorrectionNote {
+  id         String           @id @default(uuid())
+  entityType String
+  entityId   String
+  reasonCode String
+  reasonText String?
+  requestedBy String
+  approvedBy String?
+  status     CorrectionStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  decidedAt  DateTime?
+
+  requester User @relation("CorrectionRequested", fields: [requestedBy], references: [id])
+  approver  User? @relation("CorrectionApproved", fields: [approvedBy], references: [id])
+  actions   CorrectionNoteAction[]
+  request   BorrowRequest? @relation(fields: [entityId], references: [id])
+}
+
+model CorrectionNoteAction {
+  id               String   @id @default(uuid())
+  correctionNoteId String
+  patch            Json
+  actorId          String
+  createdAt        DateTime @default(now())
+
+  correctionNote CorrectionNote @relation(fields: [correctionNoteId], references: [id])
+  actor          User @relation(fields: [actorId], references: [id])
+}
+
+model MasterReason {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}

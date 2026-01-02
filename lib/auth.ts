@@ -1,43 +1,60 @@
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { getUserById } from './store';
-import { Role, User } from './types';
-import { SESSION_COOKIE_NAME, verifySessionToken, createSessionToken } from './session';
+import { type NextAuthOptions, getServerSession } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
+import { prisma } from './prisma';
+import { z } from 'zod';
 
-export function setSession(user: User) {
-  const token = createSessionToken(user);
-  cookies().set({
-    name: SESSION_COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7
-  });
-}
+const credentialsSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(4)
+});
 
-export function clearSession() {
-  cookies().set({ name: SESSION_COOKIE_NAME, value: '', path: '/', maxAge: 0 });
-}
+export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+  session: { strategy: 'jwt' },
+  pages: {
+    signIn: '/login'
+  },
+  providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
+      },
+      async authorize(credentials) {
+        const parsed = credentialsSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+        const user = await prisma.user.findFirst({
+          where: { email: parsed.data.email, deletedAt: null, isActive: true }
+        });
+        if (!user) return null;
+        const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
+        if (!valid) return null;
+        return { id: user.id, name: user.name, email: user.email, role: user.role };
+      }
+    })
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user && 'role' in user) {
+        token.role = user.role;
+        token.uid = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.uid as string;
+        session.user.role = token.role as string;
+      }
+      return session;
+    }
+  }
+};
 
-export function getCurrentUser(): User | null {
-  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return null;
-  const payload = verifySessionToken(token);
-  if (!payload) return null;
-  const user = getUserById(payload.uid);
-  return user || null;
-}
-
-export function requireUser(): User {
-  const u = getCurrentUser();
-  if (!u) redirect('/login');
-  return u;
-}
-
-export function requireRole(roles: Role[]): User {
-  const u = requireUser();
-  if (!roles.includes(u.role)) redirect('/');
-  return u;
+export async function requireSession() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return null;
+  return session;
 }

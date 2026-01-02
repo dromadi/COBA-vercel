@@ -2,14 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User } from '@/lib/types';
+import { SessionUser } from '@/lib/types';
+import { signOut } from 'next-auth/react';
 
-export default function NavBar({ user }: { user: User }) {
+export default function NavBar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
-  const links: Array<{ href: string; label: string; roles?: User['role'][] }> = [
+  const links: Array<{ href: string; label: string; roles?: SessionUser['role'][] }> = [
     { href: '/', label: 'Dashboard' },
     { href: '/tools', label: 'Master Alat', roles: ['admin', 'staff'] },
+    { href: '/master', label: 'Master Data', roles: ['admin'] },
     { href: '/requests', label: 'Peminjaman' },
+    { href: '/staff/queue', label: 'Antrian Staff', roles: ['staff', 'admin'] },
+    { href: '/approval', label: 'Approval', roles: ['approval', 'admin'] },
+    { href: '/exports', label: 'Export', roles: ['admin', 'staff'] },
     { href: '/audit', label: 'Audit Log', roles: ['admin'] }
   ];
 
@@ -65,12 +70,14 @@ export default function NavBar({ user }: { user: User }) {
               <li>
                 <hr className="dropdown-divider" />
               </li>
-              <li>
-                <form action="/api/logout" method="post" className="px-3 py-1">
-                  <button className="btn btn-outline-primary btn-sm w-100" type="submit">
-                    Keluar
-                  </button>
-                </form>
+              <li className="px-3 py-1">
+                <button
+                  className="btn btn-outline-primary btn-sm w-100"
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                >
+                  Keluar
+                </button>
               </li>
             </ul>
           </div>

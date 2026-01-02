@@ -1,81 +1,109 @@
 import NavBar from '@/app/_components/NavBar';
-import EmptyStateCard from '@/app/_components/EmptyStateCard';
-import { requireRole } from '@/lib/auth';
-import { listAudit, getUserById } from '@/lib/store';
-import { formatDateId } from '@/lib/time';
+import { requireRole } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
+import { formatDateTimeId } from '@/lib/time';
 
-export default function AuditPage() {
-  const user = requireRole(['admin']);
-  const logs = listAudit(120);
+export default async function AuditPage({
+  searchParams
+}: {
+  searchParams?: { type?: string; userId?: string };
+}) {
+  const user = await requireRole(['admin']);
+  const type = searchParams?.type || 'audit';
+  const userId = searchParams?.userId || '';
+
+  const auditLogs = await prisma.auditLog.findMany({
+    where: userId ? { actorId: userId } : undefined,
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+    include: { actor: true }
+  });
+
+  const eventLogs = await prisma.eventLog.findMany({
+    where: userId ? { actorId: userId } : undefined,
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+    include: { actor: true }
+  });
+
+  const users = await prisma.user.findMany({ where: { deletedAt: null } });
 
   return (
     <div>
       <NavBar user={user} />
       <main className="app-container page-content">
-        <div className="p-3 card-glass">
-          <h1 className="h5 mb-1">Audit Log</h1>
-          <p className="small-muted mb-3">MVP: audit log ringkas (before/after disederhanakan).</p>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h1 className="h5 mb-1">Audit & Event Log</h1>
+            <p className="small-muted mb-0">Semua aksi penting tercatat otomatis.</p>
+          </div>
+          <form className="d-flex gap-2" action="/audit" method="get">
+            <select name="type" className="form-select form-select-sm" defaultValue={type}>
+              <option value="audit">Audit Log</option>
+              <option value="event">Event Log</option>
+            </select>
+            <select name="userId" className="form-select form-select-sm" defaultValue={userId}>
+              <option value="">Semua user</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+            <button className="btn btn-outline-primary btn-sm" type="submit">Filter</button>
+          </form>
+        </div>
 
-          {logs.length === 0 ? (
-            <EmptyStateCard
-              title="Belum ada audit log"
-              description="Aktivitas akan muncul di sini setelah ada perubahan data atau request."
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path
-                    d="M9 5h6l1 2h4v2H4V7h4l1-2Zm-2 6h10v7H7v-7Z"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M9 14h6"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-              actions={[{ label: 'Refresh', href: '/audit', variant: 'outline' }]}
-            />
+        <div className="card-glass p-3">
+          {type === 'audit' ? (
+            <div className="table-responsive">
+              <table className="table table-soft table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Tabel</th>
+                    <th>Record</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map(log => (
+                    <tr key={log.id}>
+                      <td>{formatDateTimeId(log.createdAt)}</td>
+                      <td>{log.actor.name}</td>
+                      <td>{log.action}</td>
+                      <td>{log.tableName}</td>
+                      <td>{log.recordId}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="table-responsive">
               <table className="table table-soft table-hover align-middle">
                 <thead>
                   <tr>
                     <th>Waktu</th>
-                    <th>Aktor</th>
+                    <th>User</th>
                     <th>Action</th>
                     <th>Entity</th>
-                    <th>Entity ID</th>
                     <th>Remark</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map(l => (
-                    <tr key={l.id}>
-                      <td>{formatDateId(l.at)}</td>
-                      <td>{getUserById(l.actorUserId)?.email || l.actorUserId}</td>
-                      <td className="fw-semibold">{l.action}</td>
-                      <td>{l.entity}</td>
-                      <td className="small-muted">{l.entityId}</td>
-                      <td className="small-muted">{l.remark || '—'}</td>
+                  {eventLogs.map(log => (
+                    <tr key={log.id}>
+                      <td>{formatDateTimeId(log.createdAt)}</td>
+                      <td>{log.actor.name}</td>
+                      <td>{log.action}</td>
+                      <td>{log.entityType}</td>
+                      <td>{log.remark || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-
-          <details className="mt-2">
-            <summary className="small-muted">Catatan</summary>
-            <ul className="small-muted mt-2">
-              <li>Di produksi: simpan audit log ke DB, dan simpan before/after sebagai JSONB.</li>
-              <li>Tambahkan event log terpisah untuk kebutuhan pelaporan.</li>
-            </ul>
-          </details>
         </div>
       </main>
     </div>
