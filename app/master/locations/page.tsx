@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { masterSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
-import { AuditAction, EventAction } from '@prisma/client';
+import { AuditAction, EventAction } from '@/lib/constants/prisma-enums';
 
 async function createLocationAction(formData: FormData) {
   'use server';

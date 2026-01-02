@@ -6,7 +6,8 @@ import { redirect } from 'next/navigation';
 import { toolSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
-import { AuditAction, EventAction, Prisma } from '@prisma/client';
+import { AuditAction, EventAction } from '@/lib/constants/prisma-enums';
+import { Prisma } from '@prisma/client';
 
 async function createToolAction(formData: FormData) {
   'use server';

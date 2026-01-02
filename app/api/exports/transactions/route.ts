@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { utils, write } from 'xlsx';
 import { formatDateId } from '@/lib/time';
-import { EventAction, RequestStatus } from '@prisma/client';
+import { EventAction, RequestStatus } from '@/lib/constants/prisma-enums';
 import { logEvent } from '@/lib/services/event';
 
 export async function GET(req: Request) {

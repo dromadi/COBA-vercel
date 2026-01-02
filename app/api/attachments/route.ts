@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
-import { AttachmentEntityType, AttachmentRequiredType, AuditAction, EventAction } from '@prisma/client';
+import type { AttachmentEntityType, AttachmentRequiredType } from '@/lib/constants/prisma-enums';
+import { AuditAction, EventAction } from '@/lib/constants/prisma-enums';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
 

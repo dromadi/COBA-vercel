@@ -6,7 +6,7 @@ import { userSchema } from '@/lib/validation';
 import bcrypt from 'bcryptjs';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
-import { AuditAction, EventAction } from '@prisma/client';
+import { AuditAction, EventAction } from '@/lib/constants/prisma-enums';
 
 async function createUserAction(formData: FormData) {
   'use server';

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { EventAction, Prisma } from '@prisma/client';
+import { EventAction } from '@/lib/constants/prisma-enums';
+import { Prisma } from '@prisma/client';
 
 export async function logEvent(params: {
   entityType: string;

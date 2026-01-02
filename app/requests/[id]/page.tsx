@@ -8,7 +8,7 @@ import { formatDateId, isoFromDateInput } from '@/lib/time';
 import { put } from '@vercel/blob';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
-import { AttachmentEntityType, AuditAction, EventAction, RequestStatus } from '@prisma/client';
+import { AttachmentEntityType, AuditAction, EventAction, RequestStatus } from '@/lib/constants/prisma-enums';
 
 const statusBadge: Record<RequestStatus, string> = {
   DRAFT: 'badge-status badge-status--info',

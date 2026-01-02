@@ -5,7 +5,7 @@ import { requireUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { formatDateId } from '@/lib/time';
 import { flagOverdue } from '@/lib/services/request';
-import { RequestStatus } from '@prisma/client';
+import { RequestStatus } from '@/lib/constants/prisma-enums';
 
 const statusBadge: Record<RequestStatus, string> = {
   DRAFT: 'badge-status badge-status--info',

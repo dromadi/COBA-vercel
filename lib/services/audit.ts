@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { AuditAction, Prisma } from '@prisma/client';
+import { AuditAction } from '@/lib/constants/prisma-enums';
+import { Prisma } from '@prisma/client';
 
 export async function logAudit(params: {
   tableName: string;
