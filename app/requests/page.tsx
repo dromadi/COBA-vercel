@@ -32,7 +32,9 @@ export default async function RequestsPage({ searchParams }: { searchParams?: { 
   const pageSize = 10;
   const where: any = { deletedAt: null };
   if (user.role === 'peminjam') where.borrowerId = user.id;
-  if (statusParam && Object.keys(statusBadge).includes(statusParam)) {
+  if (statusParam === 'ACTIVE') {
+    where.status = { in: ['SUBMITTED', 'STAFF_REVIEW', 'APPROVAL_PENDING'] };
+  } else if (statusParam && Object.keys(statusBadge).includes(statusParam)) {
     where.status = statusParam;
   }
   if (q) {
@@ -72,6 +74,7 @@ export default async function RequestsPage({ searchParams }: { searchParams?: { 
           <input name="q" className="form-control form-control-sm" placeholder="Cari nomor / tujuan / peminjam" defaultValue={q} />
           <select name="status" className="form-select form-select-sm" defaultValue={statusParam || ''}>
             <option value="">Semua status</option>
+            <option value="ACTIVE">Aktif (Backlog)</option>
             {Object.keys(statusBadge).map(status => (
               <option key={status} value={status}>{status}</option>
             ))}

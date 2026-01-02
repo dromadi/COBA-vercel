@@ -150,14 +150,18 @@ async function deactivateToolAction(formData: FormData) {
 export default async function ToolsPage({
   searchParams
 }: {
-  searchParams?: { q?: string; page?: string; error?: string; editId?: string };
+  searchParams?: { q?: string; page?: string; error?: string; editId?: string; active?: string; condition?: string };
 }) {
   const user = await requireRole(['admin', 'staff']);
   const page = Number(searchParams?.page || '1');
   const pageSize = 10;
   const q = searchParams?.q || '';
+  const activeParam = searchParams?.active;
+  const conditionParam = searchParams?.condition;
   const where = {
     deletedAt: null,
+    ...(activeParam === '1' ? { isActive: true } : {}),
+    ...(conditionParam ? { condition: { code: conditionParam } } : {}),
     ...(q
       ? {
           OR: [
@@ -185,6 +189,7 @@ export default async function ToolsPage({
   const totalPages = Math.ceil(total / pageSize);
   const editId = searchParams?.editId;
   const editing = editId ? tools.find(tool => tool.id === editId) : null;
+  const querySuffix = `&q=${encodeURIComponent(q)}${activeParam ? `&active=${encodeURIComponent(activeParam)}` : ''}${conditionParam ? `&condition=${encodeURIComponent(conditionParam)}` : ''}`;
 
   return (
     <div>
@@ -336,11 +341,11 @@ export default async function ToolsPage({
               <div className="d-flex justify-content-between align-items-center mt-2">
                 <span className="small-muted">Total: {total} item</span>
                 <div className="d-flex gap-2">
-                  <a className={`btn btn-sm btn-outline-primary ${page <= 1 ? 'disabled' : ''}`} href={`/tools?page=${page - 1}&q=${q}`}>
+                  <a className={`btn btn-sm btn-outline-primary ${page <= 1 ? 'disabled' : ''}`} href={`/tools?page=${page - 1}${querySuffix}`}>
                     Prev
                   </a>
                   <span className="small-muted">Halaman {page} / {totalPages || 1}</span>
-                  <a className={`btn btn-sm btn-outline-primary ${page >= totalPages ? 'disabled' : ''}`} href={`/tools?page=${page + 1}&q=${q}`}>
+                  <a className={`btn btn-sm btn-outline-primary ${page >= totalPages ? 'disabled' : ''}`} href={`/tools?page=${page + 1}${querySuffix}`}>
                     Next
                   </a>
                 </div>
