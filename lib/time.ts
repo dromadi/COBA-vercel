@@ -5,19 +5,24 @@ export function nowIsoJakarta() {
   return new Date().toISOString();
 }
 
-export function formatDateId(iso: string) {
-  const d = new Date(iso);
+export function formatDateId(iso: string | Date) {
+  const d = typeof iso === 'string' ? new Date(iso) : iso;
   return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
     timeZone: TZ
   }).format(d);
 }
 
-export function formatDateOnlyId(iso: string) {
-  const d = new Date(iso);
+export function formatDateTimeId(iso: string | Date) {
+  const d = typeof iso === 'string' ? new Date(iso) : iso;
   return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
     timeZone: TZ
   }).format(d);
 }

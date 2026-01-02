@@ -1,40 +1,49 @@
-import Link from 'next/link';
+'use client';
 
-export default function LoginPage({
-  searchParams
-}: {
-  searchParams?: { error?: string; msg?: string };
-}) {
-  const error = searchParams?.error;
-  const msg = searchParams?.msg;
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+
+export default function LoginPage() {
+  const params = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const error = params.get('error');
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    setLoading(true);
+    await signIn('credentials', {
+      email: formData.get('email'),
+      password: formData.get('password'),
+      callbackUrl: '/'
+    });
+    setLoading(false);
+  }
 
   return (
     <main className="container py-5" style={{ maxWidth: 980 }}>
       <div className="row g-3 align-items-start">
         <div className="col-lg-6">
           <div className="p-4 card-glass">
-            <h1 className="h4 mb-1">Masuk • TRL Tools Lifecycle Hub (MVP)</h1>
-            <p className="small-muted mb-4">Timezone: Asia/Jakarta • Format tanggal: DD-MMM-YYYY (tampilan)
-            </p>
-            {error && (
-              <div className="alert alert-danger">Email/password salah. Coba lagi.</div>
-            )}
-            {msg && (
-              <div className="alert alert-info">{msg}</div>
-            )}
+            <h1 className="h4 mb-1">Masuk • TRL Tools Lifecycle Hub</h1>
+            <p className="small-muted mb-4">Timezone: Asia/Jakarta • Format tanggal: DD-MMM-YYYY</p>
+            {error && <div className="alert alert-danger">Email/password salah. Coba lagi.</div>}
 
-            <form action="/api/login" method="post" className="row g-3">
+            <form onSubmit={handleSubmit} className="row g-3">
               <div className="col-12">
                 <label className="form-label">Email</label>
                 <input name="email" type="email" className="form-control" required placeholder="admin@trl.local" />
               </div>
               <div className="col-12">
                 <label className="form-label">Password</label>
-                <input name="password" type="password" className="form-control" required placeholder="trl12345" />
+                <input name="password" type="password" className="form-control" required placeholder="password" />
               </div>
               <div className="col-12 d-flex gap-2">
-                <button className="btn btn-primary">Masuk</button>
-                <Link className="btn btn-outline-primary" href="/">Kembali</Link>
+                <button className="btn btn-primary" disabled={loading} type="submit">
+                  {loading ? 'Memproses...' : 'Masuk'}
+                </button>
               </div>
             </form>
           </div>
@@ -43,7 +52,7 @@ export default function LoginPage({
         <div className="col-lg-6">
           <div className="p-4 card-glass">
             <h2 className="h5">Akun demo</h2>
-            <p className="small-muted mb-3">Semua akun memakai password yang sama: <b>trl12345</b></p>
+            <p className="small-muted mb-3">Semua akun memakai password yang sama: <b>password</b></p>
             <div className="table-responsive">
               <table className="table table-soft table-hover align-middle">
                 <thead>
@@ -57,12 +66,12 @@ export default function LoginPage({
                   <tr>
                     <td><span className="badge badge-role">ADMIN</span></td>
                     <td>admin@trl.local</td>
-                    <td>Semua fitur + audit log + close request</td>
+                    <td>Semua fitur + master data + audit log</td>
                   </tr>
                   <tr>
                     <td><span className="badge badge-role">STAFF</span></td>
                     <td>staff@trl.local</td>
-                    <td>Verifikasi request + handover + return</td>
+                    <td>Review request + handover + return</td>
                   </tr>
                   <tr>
                     <td><span className="badge badge-role">APPROVAL</span></td>
@@ -77,11 +86,6 @@ export default function LoginPage({
                 </tbody>
               </table>
             </div>
-
-            <hr className="border-light opacity-25" />
-            <p className="small-muted mb-0">
-              Catatan: MVP ini memakai penyimpanan in-memory. Untuk versi produksi, ganti ke DB dan buat RBAC + RLS.
-            </p>
           </div>
         </div>
       </div>

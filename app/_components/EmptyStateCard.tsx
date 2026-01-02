@@ -10,23 +10,27 @@ type EmptyStateAction = {
 type EmptyStateCardProps = {
   title: string;
   description: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   actions?: EmptyStateAction[];
+  action?: EmptyStateAction;
 };
 
-export default function EmptyStateCard({ title, description, icon, actions = [] }: EmptyStateCardProps) {
+export default function EmptyStateCard({ title, description, icon, actions = [], action }: EmptyStateCardProps) {
+  const mergedActions = action ? [action, ...actions] : actions;
   return (
     <div className="empty-state card-glass">
-      <div className="empty-state__icon" aria-hidden>
-        {icon}
-      </div>
+      {icon && (
+        <div className="empty-state__icon" aria-hidden>
+          {icon}
+        </div>
+      )}
       <div className="empty-state__content">
         <h3 className="h6 mb-1">{title}</h3>
         <p className="small-muted mb-0">{description}</p>
       </div>
-      {actions.length > 0 && (
+      {mergedActions.length > 0 && (
         <div className="empty-state__actions">
-          {actions.map(action => (
+          {mergedActions.map(action => (
             <Link
               key={`${action.label}-${action.href}`}
               href={action.href}
