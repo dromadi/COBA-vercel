@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { Role } from '@/lib/constants/prisma-enums';
 
 export type SessionUser = {
   id: string;

@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from './auth';
 import { redirect } from 'next/navigation';
 import { SessionUser } from './types';
-import { Role } from '@prisma/client';
+import { Role } from '@/lib/constants/prisma-enums';
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
   const session = await getServerSession(authOptions);

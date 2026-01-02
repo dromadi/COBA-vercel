@@ -1,4 +1,4 @@
-import { RequestStatus, Role } from '@prisma/client';
+import { RequestStatus, Role } from '@/lib/constants/prisma-enums';
 
 export type RequestAction =
   | 'SUBMIT'

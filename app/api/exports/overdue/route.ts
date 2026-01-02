@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { utils, write } from 'xlsx';
 import { formatDateId } from '@/lib/time';
 import { logEvent } from '@/lib/services/event';
-import { EventAction } from '@prisma/client';
+import { EventAction } from '@/lib/constants/prisma-enums';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
