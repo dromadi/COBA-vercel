@@ -4,13 +4,17 @@ import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import { z } from 'zod';
 
+if (!process.env.NEXTAUTH_URL && process.env.VERCEL_URL) {
+  process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`;
+}
+
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(4)
 });
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login'
