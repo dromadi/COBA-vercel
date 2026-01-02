@@ -2,9 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { assertCan, RequestAction } from '@/lib/fsm';
 import { logAudit } from '@/lib/services/audit';
 import { logEvent } from '@/lib/services/event';
-import { AttachmentRequiredType, AuditAction, EventAction, RequestStatus, Role } from '@prisma/client';
+import { AttachmentRequiredType, AuditAction, EventAction, Prisma, RequestStatus, Role } from '@prisma/client';
 
-async function generateRequestNo(client: typeof prisma) {
+async function generateRequestNo(client: Prisma.TransactionClient) {
   const latest = await client.borrowRequest.findFirst({
     orderBy: { createdAt: 'desc' }
   });

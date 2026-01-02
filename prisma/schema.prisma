@@ -96,6 +96,7 @@ model User {
   auditLogs      AuditLog[]
   eventLogs      EventLog[]
   attachments    Attachment[]
+  correctionNoteActions CorrectionNoteAction[]
   correctionNotesRequested CorrectionNote[] @relation("CorrectionRequested")
   correctionNotesApproved  CorrectionNote[] @relation("CorrectionApproved")
 }
@@ -179,7 +180,6 @@ model BorrowRequest {
 
   borrower User @relation("BorrowerRequests", fields: [borrowerId], references: [id])
   items    BorrowRequestItem[]
-  attachments Attachment[]
   correctionNotes CorrectionNote[]
 }
 
@@ -195,7 +195,6 @@ model BorrowRequestItem {
 
   request BorrowRequest @relation(fields: [requestId], references: [id])
   tool    Tool          @relation(fields: [toolId], references: [id])
-  attachments Attachment[]
 }
 
 model Attachment {
