@@ -13,8 +13,13 @@ const credentialsSchema = z.object({
   password: z.string().min(4)
 });
 
+const authSecret =
+  process.env.NEXTAUTH_SECRET ??
+  process.env.AUTH_SECRET ??
+  (process.env.NODE_ENV !== 'production' ? 'dev-secret' : undefined);
+
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
+  secret: authSecret,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login'
