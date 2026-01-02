@@ -22,6 +22,16 @@ export default function LoginForm() {
     setLoading(false);
   }
 
+  async function handleQuickLogin(email: string) {
+    setLoading(true);
+    await signIn('credentials', {
+      email,
+      password: 'password',
+      callbackUrl: '/'
+    });
+    setLoading(false);
+  }
+
   return (
     <main className="container py-5" style={{ maxWidth: 980 }}>
       <div className="row g-3 align-items-start">
@@ -60,6 +70,7 @@ export default function LoginForm() {
                     <th>Role</th>
                     <th>Email</th>
                     <th>Hak akses ringkas</th>
+                    <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -67,21 +78,61 @@ export default function LoginForm() {
                     <td><span className="badge badge-role">ADMIN</span></td>
                     <td>admin@trl.local</td>
                     <td>Semua fitur + master data + audit log</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        disabled={loading}
+                        onClick={() => handleQuickLogin('admin@trl.local')}
+                      >
+                        Masuk cepat
+                      </button>
+                    </td>
                   </tr>
                   <tr>
                     <td><span className="badge badge-role">STAFF</span></td>
                     <td>staff@trl.local</td>
                     <td>Review request + handover + return</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        disabled={loading}
+                        onClick={() => handleQuickLogin('staff@trl.local')}
+                      >
+                        Masuk cepat
+                      </button>
+                    </td>
                   </tr>
                   <tr>
                     <td><span className="badge badge-role">APPROVAL</span></td>
                     <td>approval@trl.local</td>
                     <td>Approve / reject</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        disabled={loading}
+                        onClick={() => handleQuickLogin('approval@trl.local')}
+                      >
+                        Masuk cepat
+                      </button>
+                    </td>
                   </tr>
                   <tr>
                     <td><span className="badge badge-role">PEMINJAM</span></td>
                     <td>peminjam@trl.local</td>
                     <td>Buat & submit request</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        disabled={loading}
+                        onClick={() => handleQuickLogin('peminjam@trl.local')}
+                      >
+                        Masuk cepat
+                      </button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
