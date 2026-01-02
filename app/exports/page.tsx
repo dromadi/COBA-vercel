@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireRole } from '@/lib/session';
 import { todayInputValueJakarta } from '@/lib/time';
 
@@ -7,9 +7,8 @@ export default async function ExportPage() {
   const today = todayInputValueJakarta();
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content" style={{ maxWidth: 720 }}>
+    <AppShell user={user}>
+      <div style={{ maxWidth: 720 }}>
         <h1 className="h5 mb-3">Export Data</h1>
         <div className="card-glass p-3 mb-3">
           <h2 className="h6">Master Tools</h2>
@@ -48,7 +47,7 @@ export default async function ExportPage() {
           <h2 className="h6">Overdue</h2>
           <a className="btn btn-outline-danger btn-sm" href="/api/exports/overdue">Download overdue.xlsx</a>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

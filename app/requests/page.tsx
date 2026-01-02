@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import EmptyStateCard from '@/app/_components/EmptyStateCard';
 import { requireUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
@@ -58,29 +58,27 @@ export default async function RequestsPage({ searchParams }: { searchParams?: { 
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <h1 className="h5 mb-1">Request Peminjaman</h1>
-            <p className="small-muted mb-0">Semua status mengikuti FSM dan hanya berubah via action.</p>
-          </div>
-          {(user.role === 'peminjam' || user.role === 'admin') && (
-            <Link className="btn btn-primary btn-sm" href="/requests/new">Buat Request</Link>
-          )}
+    <AppShell user={user}>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h1 className="h5 mb-1">Request Peminjaman</h1>
+          <p className="small-muted mb-0">Semua status mengikuti FSM dan hanya berubah via action.</p>
         </div>
-        <form className="d-flex gap-2 mb-3" action="/requests" method="get">
-          <input name="q" className="form-control form-control-sm" placeholder="Cari nomor / tujuan / peminjam" defaultValue={q} />
-          <select name="status" className="form-select form-select-sm" defaultValue={statusParam || ''}>
-            <option value="">Semua status</option>
-            <option value="ACTIVE">Aktif (Backlog)</option>
-            {Object.keys(statusBadge).map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
-          <button className="btn btn-outline-primary btn-sm" type="submit">Filter</button>
-        </form>
+        {(user.role === 'peminjam' || user.role === 'admin') && (
+          <Link className="btn btn-primary btn-sm" href="/requests/new">Buat Request</Link>
+        )}
+      </div>
+      <form className="d-flex gap-2 mb-3" action="/requests" method="get">
+        <input name="q" className="form-control form-control-sm" placeholder="Cari nomor / tujuan / peminjam" defaultValue={q} />
+        <select name="status" className="form-select form-select-sm" defaultValue={statusParam || ''}>
+          <option value="">Semua status</option>
+          <option value="ACTIVE">Aktif (Backlog)</option>
+          {Object.keys(statusBadge).map(status => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
+        <button className="btn btn-outline-primary btn-sm" type="submit">Filter</button>
+      </form>
 
         {requests.length === 0 ? (
           <EmptyStateCard
@@ -136,7 +134,6 @@ export default async function RequestsPage({ searchParams }: { searchParams?: { 
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </AppShell>
   );
 }

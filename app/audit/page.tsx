@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireRole } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { formatDateTimeId } from '@/lib/time';
@@ -29,9 +29,7 @@ export default async function AuditPage({
   const users = await prisma.user.findMany({ where: { deletedAt: null } });
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
+    <AppShell user={user}>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
             <h1 className="h5 mb-1">Audit & Event Log</h1>
@@ -105,7 +103,6 @@ export default async function AuditPage({
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }

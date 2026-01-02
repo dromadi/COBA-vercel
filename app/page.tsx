@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { formatDateTimeId } from '@/lib/time';
@@ -121,20 +121,18 @@ export default async function DashboardPage() {
   ].filter(item => item.count > 0);
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
-        <div className="dashboard-header dashboard-header--compact mb-4">
-          <div>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <span className="badge badge-soft text-uppercase">{user.role}</span>
-              <span className="badge badge-soft">{user.name}</span>
-              <span className="small-muted">Tools Lifecycle Hub</span>
-            </div>
-            <h1 className="h3 fw-semibold mb-1">Dashboard Operasional</h1>
-            <p className="small-muted mb-0">Pantau backlog, aktivitas terbaru, dan peringatan prioritas hari ini.</p>
+    <AppShell user={user}>
+      <div className="dashboard-header dashboard-header--compact mb-4">
+        <div>
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <span className="badge badge-soft text-uppercase">{user.role}</span>
+            <span className="badge badge-soft">{user.name}</span>
+            <span className="small-muted">Tools Lifecycle Hub</span>
           </div>
+          <h1 className="h3 fw-semibold mb-1">Dashboard Operasional</h1>
+          <p className="small-muted mb-0">Pantau backlog, aktivitas terbaru, dan peringatan prioritas hari ini.</p>
         </div>
+      </div>
 
         <div className="row g-3 g-lg-4 dashboard-section">
           <div className="col-12 col-md-6 col-xl-3">
@@ -280,7 +278,6 @@ export default async function DashboardPage() {
             </div>
           </details>
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }

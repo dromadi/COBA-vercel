@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireRole } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
@@ -81,9 +81,7 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
+    <AppShell user={user}>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h1 className="h5 mb-0">Master Kategori</h1>
           <form className="d-flex gap-2" action="/master/categories" method="get">
@@ -155,7 +153,6 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }

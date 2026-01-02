@@ -41,6 +41,52 @@ a { text-decoration: none; }
   padding: 1.5rem 0 2.5rem;
 }
 
+.app-shell {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.app-shell__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-menu {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.side-menu__card {
+  position: sticky;
+  top: 5.5rem;
+}
+
+.side-menu__title {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+.side-menu__nav {
+  gap: 0.25rem;
+}
+
+.side-menu__link {
+  color: var(--muted);
+  border-radius: 12px;
+  padding: 0.45rem 0.75rem;
+}
+
+.side-menu__link:hover,
+.side-menu__link.active {
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-weight: 600;
+}
+
 .navbar-sticky {
   position: sticky;
   top: 0;

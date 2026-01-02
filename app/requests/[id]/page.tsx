@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireUser, requireRole } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
@@ -270,17 +270,15 @@ export default async function RequestDetailPage({ params, searchParams }: { para
   const isBorrower = user.id === request.borrowerId;
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <h1 className="h5 mb-1">Detail Request {request.requestNo}</h1>
-            <span className={statusBadge[request.status]}>{request.status}</span>
-          </div>
-          <LinkBack />
+    <AppShell user={user}>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h1 className="h5 mb-1">Detail Request {request.requestNo}</h1>
+          <span className={statusBadge[request.status]}>{request.status}</span>
         </div>
-        {searchParams?.error && <div className="alert alert-danger">{searchParams.error}</div>}
+        <LinkBack />
+      </div>
+      {searchParams?.error && <div className="alert alert-danger">{searchParams.error}</div>}
 
         <div className="row g-3">
           <div className="col-lg-7">
@@ -565,8 +563,7 @@ export default async function RequestDetailPage({ params, searchParams }: { para
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }
 

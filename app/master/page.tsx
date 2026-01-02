@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import { requireRole } from '@/lib/session';
 import Link from 'next/link';
 
@@ -13,9 +13,7 @@ export default async function MasterPage() {
   ];
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
+    <AppShell user={user}>
         <h1 className="h5 mb-3">Master Data</h1>
         <div className="row g-3">
           {cards.map(card => (
@@ -30,7 +28,6 @@ export default async function MasterPage() {
             </div>
           ))}
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }

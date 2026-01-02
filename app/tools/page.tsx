@@ -1,4 +1,4 @@
-import NavBar from '@/app/_components/NavBar';
+import AppShell from '@/app/_components/AppShell';
 import EmptyStateCard from '@/app/_components/EmptyStateCard';
 import { requireRole } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
@@ -192,9 +192,7 @@ export default async function ToolsPage({
   const querySuffix = `&q=${encodeURIComponent(q)}${activeParam ? `&active=${encodeURIComponent(activeParam)}` : ''}${conditionParam ? `&condition=${encodeURIComponent(conditionParam)}` : ''}`;
 
   return (
-    <div>
-      <NavBar user={user} />
-      <main className="app-container page-content">
+    <AppShell user={user}>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
             <h1 className="h5 mb-1">Master Alat</h1>
@@ -353,7 +351,6 @@ export default async function ToolsPage({
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }
